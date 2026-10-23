@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>キャリア＆スキルアップ目標設定ナビ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .step-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .role-card {
+            transition: all 0.25s ease;
+        }
+        .role-card:hover {
+            transform: translateY(-3px);
+        }
+        .role-card.selected {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.15);
+        }
+        .rating-btn {
+            transition: all 0.2s ease;
+        }
+        .rating-btn.active-self {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+            transform: scale(1.03);
+        }
+        .rating-btn.active-boss {
+            background-color: #059669;
+            color: white;
+            border-color: #059669;
+            transform: scale(1.03);
+        }
+        .rating-btn.active-sub {
+            background-color: #d97706;
+            color: white;
+            border-color: #d97706;
+            transform: scale(1.03);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+                    <i class="fa-solid fa-compass text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">Career Compass 360°</h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">役職別360度アセスメント（自己・上司・部下評価）＆昇進目標設定システム</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button onclick="resetApp()" class="text-xs sm:text-sm text-slate-600 hover:text-indigo-600 font-medium px-3 py-2 rounded-lg hover:bg-slate-100 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>最初から診断する</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="bg-white border-b border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between relative">
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 -z-0 rounded"></div>
+                <div id="progress-line" class="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-indigo-600 -z-0 rounded transition-all duration-500" style="width: 0%;"></div>
+                
+                <!-- Step 1 Indicator -->
+                <div class="relative z-10 flex flex-col items-center cursor-pointer" onclick="navigateStep(1)">
+                    <div id="step-dot-1" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-indigo-600 text-white ring-4 ring-white shadow">1</div>
+                    <span id="step-label-1" class="text-xs font-semibold text-indigo-600 mt-1 bg-white px-2 rounded">現在の役職</span>
+                </div>
+                
+                <!-- Step 2 Indicator -->
+                <div class="relative z-10 flex flex-col items-center cursor-pointer" onclick="navigateStep(2)">
+                    <div id="step-dot-2" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-slate-200 text-slate-500 ring-4 ring-white">2</div>
+                    <span id="step-label-2" class="text-xs font-medium text-slate-500 mt-1 bg-white px-2 rounded">現状の診断質問</span>
+                </div>
+                
+                <!-- Step 3 Indicator -->
+                <div class="relative z-10 flex flex-col items-center cursor-pointer" onclick="navigateStep(3)">
+                    <div id="step-dot-3" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-slate-200 text-slate-500 ring-4 ring-white">3</div>
+                    <span id="step-label-3" class="text-xs font-medium text-slate-500 mt-1 bg-white px-2 rounded">分析＆目標設定</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Notification Toast -->
+        <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+            <div class="bg-slate-800 text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-3">
+                <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span id="toast-msg" class="text-sm font-medium">保存しました</span>
+            </div>
+        </div>
+
+        <!-- STEP 1: Role Selection -->
+        <section id="step-1" class="step-transition">
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <span class="inline-block px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold mb-2">STEP 1</span>
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-800">現在のあなたの役職を選択してください</h2>
+                <p class="text-slate-600 mt-2 text-sm sm:text-base">現在のポジションと、次のキャリアステップ（昇進・視座向上）に応じた最適な現状診断質問を用意します。</p>
+            </div>
+
+            <div id="role-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+                <!-- Dynamically populated via JS -->
+            </div>
+
+            <!-- Selected Role Preview & Next Button -->
+            <div id="role-preview-box" class="max-w-3xl mx-auto mt-8 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hidden">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">選択中の役職</span>
+                            <span id="preview-next-badge" class="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md"></span>
+                        </div>
+                        <h3 id="preview-role-title" class="text-xl font-bold text-slate-800 mt-2"></h3>
+                        <p id="preview-role-desc" class="text-sm text-slate-600 mt-1"></p>
+                    </div>
+                    <button onclick="goToStep2()" class="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3.5 rounded-xl shadow-md shadow-indigo-200 transition flex items-center justify-center gap-2">
+                        <span>現状を明らかにする質問へ</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 2: Assessment Questions -->
+        <section id="step-2" class="step-transition hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <button onclick="navigateStep(1)" class="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1.5 font-medium">
+                        <i class="fa-solid fa-arrow-left"></i> 役職選択に戻る
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-500">現在の役職:</span>
+                        <span id="step2-role-badge" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold"></span>
+                    </div>
+                </div>
+
+                <!-- 360 Evaluation Perspective Switcher Bar (Sticky) -->
+                <div class="sticky top-16 z-20 bg-white/95 backdrop-blur border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-md mb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">360° 評価入力モード切替</span>
+                            <p class="text-xs text-slate-600 mt-0.5">3つの視点（自己・上司・部下/周囲）を切り替えてスコアを入力できます（未入力時は自己評価と同値またはデモ値を一括設定可能）。</p>
+                        </div>
+                        <button onclick="fillMock360Scores()" type="button" class="shrink-0 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5 self-start sm:self-auto" title="上司・部下評価のリアルなギャップ例を自動入力します">
+                            <i class="fa-solid fa-sliders text-indigo-600"></i>
+                            <span>上司・部下のサンプル評価を自動反映</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mt-3">
+                        <button type="button" onclick="switchRaterTab('self')" id="rater-tab-self" class="py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-indigo-600 text-white border-indigo-600 shadow-sm">
+                            <i class="fa-solid fa-user"></i>
+                            <span>1. 自己評価</span>
+                        </button>
+                        <button type="button" onclick="switchRaterTab('boss')" id="rater-tab-boss" class="py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-white text-slate-600 border-slate-200 hover:border-emerald-400">
+                            <i class="fa-solid fa-user-tie"></i>
+                            <span id="rater-label-boss">2. 上司からの評価</span>
+                        </button>
+                        <button type="button" onclick="switchRaterTab('sub')" id="rater-tab-sub" class="py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-white text-slate-600 border-slate-200 hover:border-amber-400">
+                            <i class="fa-solid fa-users"></i>
+                            <span id="rater-label-sub">3. 部下からの評価</span>
+                        </button>
+                    </div>
+                    <div id="active-rater-banner" class="mt-2.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-800 text-xs font-medium flex items-center justify-between">
+                        <span id="active-rater-desc"><i class="fa-solid fa-circle-info mr-1.5"></i>現在は<strong>「自己評価」</strong>の入力モードです。あなた自身の視点で1〜5を選択してください。</span>
+                        <span class="text-[11px] font-bold">全10問 × 3視点</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-6">
+                    <div class="mb-6 pb-4 border-b border-slate-100">
+                        <span class="inline-block px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold mb-2">STEP 2</span>
+                        <h2 class="text-xl sm:text-2xl font-bold text-slate-800">今の現状と周囲からの評価を明らかにする10の質問</h2>
+                        <p class="text-sm text-slate-600 mt-1">
+                            各設問で<strong class="text-indigo-600">「自己評価」</strong><strong class="text-emerald-600">「上司からの評価（または期待視点）」</strong><strong class="text-amber-600">「部下・後輩からの評価」</strong>の3つを入力・比較できます。
+                        </p>
+                    </div>
+
+                    <!-- Questions Container -->
+                    <div id="questions-container" class="space-y-8">
+                        <!-- Populated via JS -->
+                    </div>
+
+                    <!-- Qualitative Current Issues Input -->
+                    <div class="mt-10 pt-8 border-t border-slate-200">
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-pen-to-square text-indigo-600"></i>
+                            現在の最大の悩み・上司や部下からのフィードバック（任意）
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1 mb-3">現在あなたが課題に感じているタグを選択、または面談等で言われたコメントを自由に記述してください。</p>
+                        
+                        <div id="bottleneck-tags" class="flex flex-wrap gap-2 mb-4">
+                            <!-- Tags generated via JS -->
+                        </div>
+
+                        <textarea id="custom-issue-input" rows="2" class="w-full rounded-xl border border-slate-300 p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" placeholder="例：上司からは「もっと戦略視点を持て」と言われ、部下からは「忙しそうで相談しづらい」と言われている..."></textarea>
+                    </div>
+
+                    <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                        <div class="text-xs text-slate-500">
+                            入力状況: 自己(<span id="answered-self-count" class="font-bold text-indigo-600">10</span>/10) ・ 上司(<span id="answered-boss-count" class="font-bold text-emerald-600">10</span>/10) ・ 部下(<span id="answered-sub-count" class="font-bold text-amber-600">10</span>/10)
+                        </div>
+                        <button onclick="completeAssessment()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-md shadow-indigo-200 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>3つの評価を分析し、目標を設定する</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 3: Results & Goal Setting -->
+        <section id="step-3" class="step-transition hidden">
+            <!-- Top Career Path Banner -->
+            <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg mb-8">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-200 mb-2">
+                            <span>360° キャリア診断＆ギャップ分析レポート</span>
+                            <span>•</span>
+                            <span id="report-date"></span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 mt-1">
+                            <div class="bg-white/10 backdrop-blur px-4 py-2 rounded-xl border border-white/20">
+                                <span class="text-xs text-indigo-200 block">現在の役職</span>
+                                <span id="result-current-role" class="text-lg sm:text-xl font-bold"></span>
+                            </div>
+                            <i class="fa-solid fa-angles-right text-amber-400 text-xl"></i>
+                            <div class="bg-amber-400/20 backdrop-blur px-4 py-2 rounded-xl border border-amber-400/40">
+                                <span class="text-xs text-amber-200 block">次のターゲット（昇進・到達目標）</span>
+                                <span id="result-next-role" class="text-lg sm:text-xl font-bold text-amber-300"></span>
+                            </div>
+                        </div>
+                        <p id="result-summary-text" class="text-sm text-indigo-100 mt-4 max-w-3xl leading-relaxed"></p>
+                    </div>
+
+                    <!-- 3-Way Score Summary Cards -->
+                    <div class="grid grid-cols-3 gap-2.5 shrink-0">
+                        <div class="bg-indigo-500/20 rounded-xl p-3.5 text-center border border-indigo-400/30">
+                            <span class="text-[11px] text-indigo-200 block font-semibold"><i class="fa-solid fa-user mr-1"></i>自己評価</span>
+                            <div class="text-xl sm:text-2xl font-extrabold text-white mt-1">
+                                <span id="self-score-val">0</span><span class="text-xs font-normal text-indigo-200">/100</span>
+                            </div>
+                        </div>
+                        <div class="bg-emerald-500/20 rounded-xl p-3.5 text-center border border-emerald-400/30">
+                            <span class="text-[11px] text-emerald-200 block font-semibold"><i class="fa-solid fa-user-tie mr-1"></i>上司評価</span>
+                            <div class="text-xl sm:text-2xl font-extrabold text-emerald-300 mt-1">
+                                <span id="boss-score-val">0</span><span class="text-xs font-normal text-emerald-200">/100</span>
+                            </div>
+                        </div>
+                        <div class="bg-amber-500/20 rounded-xl p-3.5 text-center border border-amber-400/30">
+                            <span class="text-[11px] text-amber-200 block font-semibold"><i class="fa-solid fa-users mr-1"></i>部下評価</span>
+                            <div class="text-xl sm:text-2xl font-extrabold text-amber-300 mt-1">
+                                <span id="sub-score-val">0</span><span class="text-xs font-normal text-amber-200">/100</span>
+                            </div>
+                        </div>
+                        <div class="col-span-3 bg-white/10 rounded-xl py-2 px-3 text-center border border-white/15 flex items-center justify-between">
+                            <span class="text-xs text-indigo-200">360°総合レディネス (<span id="total-score-val" class="font-bold text-white">0</span>点)</span>
+                            <span id="readiness-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-400/20 text-emerald-300"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW SECTION: 360-Degree Multi-Rater Deep Analysis -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-6 border-b border-slate-100">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 text-xs font-bold">360° ANALYSIS</span>
+                            <h3 class="text-lg sm:text-xl font-bold text-slate-800">自己・上司・部下の3視点ギャップ分析</h3>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">自己認識と他者評価（上からの視点・下からの視点）のズレから、あなたの組織内での見られ方と隠れた課題を浮き彫りにします。</p>
+                    </div>
+                    <button onclick="navigateStep(2)" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 self-start sm:self-auto bg-indigo-50 px-3 py-2 rounded-lg">
+                        <i class="fa-solid fa-sliders"></i> 3つの評価スコアを修正する
+                    </button>
+                </div>
+
+                <!-- 3 Perspective Insight Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <!-- 1. Overall Balance Type -->
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-slate-500">360° 評価バランス診断</span>
+                                <i class="fa-solid fa-scale-balanced text-indigo-600"></i>
+                            </div>
+                            <div id="pattern-type-badge" class="inline-block px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold mb-2"></div>
+                            <p id="pattern-type-desc" class="text-xs text-slate-600 leading-relaxed"></p>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-slate-200/70 flex items-center justify-between text-[11px] text-slate-500">
+                            <span>自己と他者平均の差:</span>
+                            <span id="self-others-diff-val" class="font-bold text-slate-800"></span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Self vs Boss Analysis -->
+                    <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-emerald-800">自己評価 vs 上司からの評価</span>
+                                <span id="boss-gap-badge" class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800"></span>
+                            </div>
+                            <h4 id="boss-gap-title" class="text-sm font-bold text-emerald-950 mb-1"></h4>
+                            <p id="boss-gap-desc" class="text-xs text-emerald-900 leading-relaxed"></p>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-emerald-200/60 text-[11px] text-emerald-800 font-medium" id="boss-max-gap-item"></div>
+                    </div>
+
+                    <!-- 3. Self vs Subordinate Analysis -->
+                    <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-amber-800">自己評価 vs 部下からの評価</span>
+                                <span id="sub-gap-badge" class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800"></span>
+                            </div>
+                            <h4 id="sub-gap-title" class="text-sm font-bold text-amber-950 mb-1"></h4>
+                            <p id="sub-gap-desc" class="text-xs text-amber-900 leading-relaxed"></p>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-amber-200/60 text-[11px] text-amber-800 font-medium" id="sub-max-gap-item"></div>
+                    </div>
+                </div>
+
+                <!-- Category-by-Category 3-Rater Comparison Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-[11px] sm:text-xs text-slate-500 bg-slate-50">
+                                <th class="py-2.5 px-3 font-bold rounded-tl-lg">スキル領域（5大カテゴリ）</th>
+                                <th class="py-2.5 px-3 font-bold text-center text-indigo-700"><i class="fa-solid fa-user mr-1"></i>自己評価</th>
+                                <th class="py-2.5 px-3 font-bold text-center text-emerald-700"><i class="fa-solid fa-user-tie mr-1"></i>上司評価</th>
+                                <th class="py-2.5 px-3 font-bold text-center text-amber-700"><i class="fa-solid fa-users mr-1"></i>部下評価</th>
+                                <th class="py-2.5 px-3 font-bold rounded-tr-lg">認識ギャップ判定・分析コメント</th>
+                            </tr>
+                        </thead>
+                        <tbody id="category-gap-tbody" class="divide-y divide-slate-100 text-xs sm:text-sm">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Main Grid: Left (Analysis & Chart) / Right (Goal Setting & Action Plan) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Left Column: Visual Analysis (5 cols) -->
+                <div class="lg:col-span-5 space-y-6">
+                    <!-- Radar Chart Card -->
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
+                            <i class="fa-solid fa-chart-pie text-indigo-600"></i>
+                            <span>360° 5大スキル領域レーダーチャート</span>
+                        </h3>
+                        <div class="relative w-full aspect-square max-h-80 mx-auto">
+                            <canvas id="skillRadarChart"></canvas>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 space-y-1.5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-indigo-600 inline-block"></span>
+                                <span><strong>自己評価:</strong> 自分が認識している現在地</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-600 inline-block"></span>
+                                <span><strong>上司からの評価:</strong> 上位職・経営側から見た評価</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+                                <span><strong>部下からの評価:</strong> 現場メンバー・後輩から見た評価</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Strengths & Weaknesses Breakdown -->
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-5">
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass-chart text-indigo-600"></i>
+                            <span>現状の強みと最優先強化テーマ</span>
+                        </h3>
+
+                        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                            <div class="flex items-center gap-2 text-emerald-800 font-bold text-sm mb-1">
+                                <i class="fa-solid fa-thumbs-up"></i>
+                                <span>現在の強み・発揮できている領域</span>
+                            </div>
+                            <p id="strength-analysis" class="text-xs sm:text-sm text-emerald-900 leading-relaxed"></p>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-rose-50 border border-rose-200">
+                            <div class="flex items-center gap-2 text-rose-800 font-bold text-sm mb-1">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span>次の昇進に向けた最重要ギャップ（課題）</span>
+                            </div>
+                            <p id="weakness-analysis" class="text-xs sm:text-sm text-rose-900 leading-relaxed"></p>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                            <div class="flex items-center gap-2 text-slate-800 font-bold text-sm mb-1">
+                                <i class="fa-solid fa-arrow-up-right-dots text-indigo-600"></i>
+                                <span id="mindset-shift-title">次の役職へのマインドセット転換</span>
+                            </div>
+                            <p id="mindset-shift-desc" class="text-xs sm:text-sm text-slate-600 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Interactive Skill-Up Goal Manager (7 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+                    
+                    <!-- Goal Progress Summary Card -->
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-bullseye text-indigo-600"></i>
+                                    <span>スキルアップ目標＆アクションプラン</span>
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-0.5">診断結果から自動生成された目標リストです。自由に編集・追加・チェックが可能です。</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="copyGoalsToClipboard()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                                    <i class="fa-regular fa-copy"></i>
+                                    <span>目標シートをコピー</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar for Goals -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+                            <div class="flex justify-between items-center text-xs font-semibold mb-2">
+                                <span class="text-slate-600">アクションプラン達成率</span>
+                                <span id="goal-progress-text" class="text-indigo-600 font-bold">0% (0/0 完了)</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div id="goal-progress-bar" class="h-full bg-indigo-600 rounded-full transition-all duration-300" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Filter Tabs -->
+                        <div class="flex flex-wrap gap-2 mb-4 border-b border-slate-100 pb-3">
+                            <button onclick="filterGoals('all')" id="tab-all" class="goal-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white">すべて表示</button>
+                            <button onclick="filterGoals('gap_fix')" id="tab-gap_fix" class="goal-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">360°ギャップ解消</button>
+                            <button onclick="filterGoals('next_step')" id="tab-next_step" class="goal-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">昇進・次役職への準備</button>
+                            <button onclick="filterGoals('current_role')" id="tab-current_role" class="goal-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">現役職の基盤固め</button>
+                            <button onclick="filterGoals('custom')" id="tab-custom" class="goal-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">自作目標</button>
+                        </div>
+
+                        <!-- Goals List -->
+                        <div id="goals-list" class="space-y-3">
+                            <!-- Populated via JS -->
+                        </div>
+
+                        <!-- Add Custom Goal Form -->
+                        <div class="mt-6 pt-6 border-t border-slate-200">
+                            <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-1.5">
+                                <i class="fa-solid fa-plus-circle text-indigo-600"></i>
+                                <span>新しいスキルアップ目標を追加する</span>
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                                <div class="sm:col-span-6">
+                                    <input type="text" id="new-goal-title" placeholder="目標・アクション内容を入力..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="sm:col-span-3">
+                                    <select id="new-goal-deadline" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                        <option value="1ヶ月以内">期限: 1ヶ月以内</option>
+                                        <option value="3ヶ月以内" selected>期限: 3ヶ月以内</option>
+                                        <option value="半年以内">期限: 半年以内</option>
+                                        <option value="1年以内">期限: 1年以内</option>
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-3">
+                                    <button onclick="addCustomGoal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-1.5">
+                                        <i class="fa-solid fa-plus"></i>
+                                        <span>追加</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Career Commitment Declaration Box -->
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-flag-checkered text-indigo-600"></i>
+                            <span>半年後のコミットメント宣言（KGI/目指す姿）</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 mb-3">上司との1on1や評価面談でそのまま使える「自分が目指す次の姿」のまとめメモです。</p>
+                        <textarea id="commitment-memo" rows="3" onchange="saveStateToStorage()" class="w-full rounded-xl border border-slate-300 p-3.5 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                        <div class="flex justify-end mt-2">
+                            <span class="text-xs text-slate-400">※入力内容はブラウザに自動保存されます</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * 7つの役職ごとの詳細データ定義
+         * 一般社員 / 主任 / 係長 / 課長 / 部長 / 会社役員 / 会社社長
+         */
+        const ROLES_DATA = {
+            staff: {
+                id: 'staff',
+                name: '一般社員',
+                nextRole: '主任',
+                icon: 'fa-user',
+                badgeColor: 'bg-sky-100 text-sky-700',
+                shortDesc: '定常業務の確実な遂行と、基礎的なビジネススキル・自律性の確立',
+                mindsetShift: '「指示された仕事を正確にこなす（受動）」から、「自ら課題を見つけて周囲を巻き込み、後輩の手本となる（能動・小集団リード）」への転換が主任昇進の鍵です。',
+                radarCategories: ['業務遂行・正確性', '自律的課題解決', '報連相・協調性', '専門知識・スキル', '後輩支援・リーダーシップ'],
+                bottlenecks: ['業務スピード・優先順位付け', '専門知識の不足', '主体的な提案への苦手意識', '後輩への教え方がわからない', '将来のキャリア像が曖昧'],
+                questions: [
+                    // 現役職の習熟度 (Q1-Q5)
+                    { id: 'q1', type: 'current', categoryIndex: 0, text: '日々の担当業務において、納期と品質基準を安定して守り、ミスなく完遂できている。', skillTag: '業務完遂力', lowGoal: { title: '業務チェックリストを作成し、手戻り・ミスをゼロにする仕組みを作る', kpi: '月間の手戻り発生件数0件、納期遵守率100%', deadline: '1ヶ月以内' } },
+                    { id: 'q2', type: 'current', categoryIndex: 2, text: '上司やチームメンバーに対し、適切なタイミングで結論ファーストの「報・連・相」ができている。', skillTag: 'ビジネスコミュニケーション', lowGoal: { title: 'トラブルや懸念事項は「事実・原因・対策案」をセットにして即座に報告する習慣をつける', kpi: '日々の報告で「自分の意見・対策案」を必ず1つ添える', deadline: '1ヶ月以内' } },
+                    { id: 'q3', type: 'current', categoryIndex: 3, text: '自分の担当領域における業界知識や社内システム・ツールの使い方を十分に理解している。', skillTag: '実務専門スキル', lowGoal: { title: '業務に関連する基本資格の取得、または社内マニュアルの完全習得を行う', kpi: '関連書籍3冊読破または資格試験の合格', deadline: '3ヶ月以内' } },
+                    { id: 'q4', type: 'current', categoryIndex: 1, text: '複数のタスクが重なった際、パニックにならず重要度と緊急度を見極めて優先順位をつけられている。', skillTag: 'タスクマネジメント', lowGoal: { title: '毎朝10分間で1日のタスク見積もりと優先順位付け（アイゼンハワーマトリクス活用）を行う', kpi: '定時内での計画タスク消化率85%以上', deadline: '1ヶ月以内' } },
+                    { id: 'q5', type: 'current', categoryIndex: 0, text: '過去の失敗や上司からのフィードバックをメモし、同じミスを繰り返さないよう改善できている。', skillTag: '自己改善サイクル', lowGoal: { title: '週に1回15分の「業務振り返りノート」を記録し、翌週の改善アクションを1つ決める', kpi: '週次振り返りの継続実施（12週連続）', deadline: '3ヶ月以内' } },
+                    // 次役職（主任）への準備度 (Q6-Q10)
+                    { id: 'q6', type: 'next', categoryIndex: 1, text: '【主任への準備】指示を待つだけでなく、「もっとこうすれば効率化できる」という業務改善案を自ら提案している。', skillTag: '業務改善提案', lowGoal: { title: '現在のルーチン業務から無駄を洗い出し、月1件以上の業務改善・効率化提案をチームに出す', kpi: '四半期で3件の業務改善提案と1件以上の実装', deadline: '3ヶ月以内' } },
+                    { id: 'q7', type: 'next', categoryIndex: 4, text: '【主任への準備】後輩や新入社員の質問に丁寧に答え、業務の進め方を分かりやすく教えることができている。', skillTag: '後輩育成・OJT', lowGoal: { title: '新入社員・後輩のOJT担当や相談役に立候補し、つまずきやすいポイントをマニュアル化する', kpi: '後輩向け手順書の作成1件と週1回のフォロー声かけ', deadline: '3ヶ月以内' } },
+                    { id: 'q8', type: 'next', categoryIndex: 3, text: '【主任への準備】自分の担当範囲だけでなく、チーム全体の目標数値や他メンバーの業務状況を把握している。', skillTag: 'チーム視野の獲得', lowGoal: { title: '定例会議でチーム全体のKPI進捗を把握し、負荷が高いメンバーのタスクを巻き取る動きをする', kpi: '月2回以上の他メンバー業務サポート実施', deadline: '3ヶ月以内' } },
+                    { id: 'q9', type: 'next', categoryIndex: 4, text: '【主任への準備】イレギュラーなトラブルが発生した際、一次対応を自分の判断で落ち着いて進められる。', skillTag: 'トラブル一次対応力', lowGoal: { title: '過去のトラブル事例と対応策を整理し、緊急時に自分が先頭に立って初期対応案をまとめる', kpi: 'トラブル発生時の初期対応案作成を自力で完遂', deadline: '半年以内' } },
+                    { id: 'q10', type: 'next', categoryIndex: 2, text: '【主任への準備】他部署や取引先とのやり取りにおいて、自部署の代表として信頼される折衝ができている。', skillTag: '対外折衝の基礎', lowGoal: { title: '商談や他部署との調整会議で議事録だけでなくファシリテーション（進行役）を経験する', kpi: '会議での進行役・メイン説明担当を月2回以上経験', deadline: '半年以内' } }
+                ]
+            },
+            chief: {
+                id: 'chief',
+                name: '主任',
+                nextRole: '係長',
+                icon: 'fa-user-check',
+                badgeColor: 'bg-blue-100 text-blue-700',
+                shortDesc: '現場の中核プレイヤーとして成果を出しつつ、後輩指導と業務改善を牽引',
+                mindsetShift: '「自分が一番できるプレイヤー」から、「小チーム（係）全体の成果を最大化するために、人に仕事を任せて動かすリーダー」への脱皮が係長昇進の鍵です。',
+                radarCategories: ['高度な実務・専門性', '後輩指導・OJT力', '業務改善・標準化', '小集団リーダーシップ', '目標・数値管理意識'],
+                bottlenecks: ['自分でやった方が早くて任せられない', '後輩のモチベーション維持', 'プレイヤー業務と指導の両立', '上長（係長・課長）との板挟み', '数値根拠のある提案'],
+                questions: [
+                    { id: 'q1', type: 'current', categoryIndex: 0, text: '現場の主力メンバーとして、難易度の高い案件やイレギュラー対応を自力で完遂できている。', skillTag: '高度実務の完遂', lowGoal: { title: '高難度案件の成功パターンを言語化し、自分以外のメンバーでも再現できるナレッジにまとめる', kpi: 'ベストプラクティス事例集の作成とチーム共有（月1回）', deadline: '3ヶ月以内' } },
+                    { id: 'q2', type: 'current', categoryIndex: 1, text: '後輩のスキルレベルに合わせて業務を切り出し、適切なフィードバックを通じて成長を促せている。', skillTag: 'コーチング・指導力', lowGoal: { title: '後輩への指示出し時に「目的・背景・期待する水準」を言語化し、週1回の1on1で振り返りを行う', kpi: '担当後輩との15分1on1の毎週実施', deadline: '1ヶ月以内' } },
+                    { id: 'q3', type: 'current', categoryIndex: 2, text: '属人化している業務を見つけ出し、マニュアル化やツール導入によってチーム全体の生産性を上げている。', skillTag: '業務標準化・仕組み化', lowGoal: { title: '自分にしかできない業務（属人業務）を3つ特定し、手順書化して後輩へ権限移譲する', kpi: '自分の定常作業時間を月10時間削減し後輩へ移管', deadline: '3ヶ月以内' } },
+                    { id: 'q4', type: 'current', categoryIndex: 3, text: '上長（係長・課長）の意図や方針を正しく理解し、現場メンバーに前向きな言葉で翻訳して伝えている。', skillTag: '方針の翻訳・浸透', lowGoal: { title: '上長の方針が発表された際、現場で具体的にどう動くべきかを整理してチームミーティングで補足する', kpi: '定例会での具体アクションへのブレイクダウン発表', deadline: '1ヶ月以内' } },
+                    { id: 'q5', type: 'current', categoryIndex: 0, text: '関連する他部署と円滑な関係を築き、現場レベルの調整やトラブル解決をスムーズに行えている。', skillTag: '部門間連携', lowGoal: { title: '関連部署のキーマンと定期的に情報交換し、部門間の業務ボトルネックを1つ解消する', kpi: '他部署との合同改善ミーティングの実施', deadline: '3ヶ月以内' } },
+                    // 次役職（係長）への準備度
+                    { id: 'q6', type: 'next', categoryIndex: 4, text: '【係長への準備】個人の目標だけでなく、チーム（係）全体の月間・四半期KPIの進捗を常に把握し、遅れに対する対策を打てている。', skillTag: 'チームKPI管理', lowGoal: { title: 'チーム全体のKPI進捗管理表を週次で分析し、未達リスクがある場合の挽回策を上長に提案する', kpi: '週次でのチーム数値分析と挽回アクション提案', deadline: '3ヶ月以内' } },
+                    { id: 'q7', type: 'next', categoryIndex: 3, text: '【係長への準備】「自分でやった方が早い」という思考を手放し、メンバーの成長のために思い切って仕事を任せられている。', skillTag: 'デリゲーション（任せる力）', lowGoal: { title: '自分が抱えている業務の30%を洗い出し、育成計画とセットで後輩にアサイン・伴走する', kpi: '主要業務の30%をメンバーへ移管完了', deadline: '半年以内' } },
+                    { id: 'q8', type: 'next', categoryIndex: 4, text: '【係長への準備】感覚や経験則だけでなく、客観的なデータや数値を用いて上長に企画・改善提案ができている。', skillTag: '定量分析・企画提案', lowGoal: { title: '業務改善や新規施策を提案する際、必ず「費用対効果（ROI）・削減工数・見込み数値」を算出する', kpi: '定量根拠付きの企画提案書を四半期に2本提出', deadline: '3ヶ月以内' } },
+                    { id: 'q9', type: 'next', categoryIndex: 1, text: '【係長への準備】メンバーのモチベーション低下やメンタルの不調にいち早く気づき、適切なケアや面談ができている。', skillTag: 'ピープルケア・傾聴力', lowGoal: { title: '傾聴スキルとアサーティブコミュニケーションを学び、メンバーの本音やキャリア志向を把握する', kpi: 'チーム全員とのキャリア・業務相談会の実施', deadline: '3ヶ月以内' } },
+                    { id: 'q10', type: 'next', categoryIndex: 3, text: '【係長への準備】小規模プロジェクトやタスクフォースのリーダーとして、スケジュール管理と推進を任されている。', skillTag: 'プロジェクト推進力', lowGoal: { title: 'チーム横断のプロジェクトや新施策の推進リーダーに立候補し、WBS（工程表）を引いて完遂する', kpi: '小規模プロジェクトのリーダー完遂1件以上', deadline: '半年以内' } }
+                ]
+            },
+            subsection_chief: {
+                id: 'subsection_chief',
+                name: '係長',
+                nextRole: '課長',
+                icon: 'fa-users-gear',
+                badgeColor: 'bg-indigo-100 text-indigo-700',
+                shortDesc: '小集団（係・チーム）のプレイングマネージャーとしてチーム目標達成と育成を主導',
+                mindsetShift: '「現場の先頭に立つプレイングリーダー」から、「課の予算・人事評価・中長期計画に責任を持つ純粋なマネジメント層（管理職）」への意識改革が課長昇進の鍵です。',
+                radarCategories: ['チームKPI達成力', '部下育成・評価補助', 'プロジェクト管理', '問題解決・構造化', '管理職視座・コスト意識'],
+                bottlenecks: ['プレイング比率が高すぎる', 'チームの目標未達時の軌道修正', '扱いづらい部下・年上部下への対応', '課長視点（予算・評価）の経験不足', '他部署との利害調整'],
+                questions: [
+                    { id: 'q1', type: 'current', categoryIndex: 0, text: '係（チーム）の目標数値をメンバー個々のアクションプランに分解し、確実に達成へ導けている。', skillTag: '目標ブレイクダウン', lowGoal: { title: 'チームの月間目標をメンバー別の週間KPI（行動指標）に分解し、週次MTGでPDCAを回す', kpi: 'チーム月間KPI達成率100%の継続', deadline: '3ヶ月以内' } },
+                    { id: 'q2', type: 'current', categoryIndex: 2, text: 'チーム内の業務負荷の偏りを常に把握し、適切なリソース配分とスケジュール調整ができている。', skillTag: 'リソースマネジメント', lowGoal: { title: 'メンバー別の業務稼働状況・残業時間を可視化し、業務の再配分とボトルネック解消を行う', kpi: 'チーム内の残業時間の平準化と月平均20%削減', deadline: '3ヶ月以内' } },
+                    { id: 'q3', type: 'current', categoryIndex: 1, text: '多様なメンバー（若手、中堅、年上など）の特性に合わせ、強みを引き出すマネジメントができている。', skillTag: '多様性マネジメント', lowGoal: { title: 'メンバー1人ひとりの「強み・課題・キャリア目標」シートを作成し、特性に応じたアサインを行う', kpi: '全メンバーの育成計画策定と月1回の振り返り面談', deadline: '3ヶ月以内' } },
+                    { id: 'q4', type: 'current', categoryIndex: 3, text: '現場で発生した複雑なトラブルやクレームに対し、根本原因（構造的要因）を特定して再発防止策を実行している。', skillTag: '構造的問題解決', lowGoal: { title: '「なぜなぜ分析」を用いてトラブルの根本原因を特定し、個人攻撃ではなく仕組みの改修で解決する', kpi: '重大インシデント・クレームの再発率0%', deadline: '3ヶ月以内' } },
+                    { id: 'q5', type: 'current', categoryIndex: 2, text: '課長を補佐する右腕として、課全体の課題解決や他チームとの連携を積極的に牽引している。', skillTag: '上位職補佐・フォロワーシップ', lowGoal: { title: '課長が抱えている課題をヒアリングし、そのうち1〜2つのテーマを自分が巻き取って推進する', kpi: '課長業務の巻き取り・代行プロジェクト1件以上', deadline: '半年以内' } },
+                    // 次役職（課長）への準備度
+                    { id: 'q6', type: 'next', categoryIndex: 4, text: '【課長への準備】自分のプレイング業務を最小限に抑え、マネジメントと戦略実行に時間の過半数を投資できている。', skillTag: 'プレイングからの脱却', lowGoal: { title: '主任・次期リーダー候補を育成し、自分の実務作業の50%以上を権限移譲してマネジメント時間を確保する', kpi: '自身のプレイング比率を40%以下に圧縮', deadline: '半年以内' } },
+                    { id: 'q7', type: 'next', categoryIndex: 4, text: '【課長への準備】売上や成果だけでなく、人件費や外注費を含めた「コスト・利益率（採算性）」を意識して意思決定している。', skillTag: '予算・採算管理（PL意識）', lowGoal: { title: '自部門の予算・原価・利益構造（部門別PL）を把握し、利益率を改善する施策を企画する', kpi: 'アカウンティング基礎の習得とコスト改善案の実行', deadline: '半年以内' } },
+                    { id: 'q8', type: 'next', categoryIndex: 1, text: '【課長への準備】メンバーの成果とプロセスを公平・客観的に評価し、納得感のあるフィードバックができる基準を持っている。', skillTag: '人事評価・フィードバック力', lowGoal: { title: '自社の評価制度の基準を深く理解し、一次評価のシミュレーションと根拠の言語化トレーニングを行う', kpi: '全メンバーの期中評価フィードバック面談の実施', deadline: '半年以内' } },
+                    { id: 'q9', type: 'next', categoryIndex: 3, text: '【課長への準備】1年後・3年後の市場変化や全社方針を見据え、課として取り組むべき中長期の戦略を描けている。', skillTag: '中長期計画の立案', lowGoal: { title: '来期の課の戦略方針・重点施策・必要人員計画のドラフト（仮想課長プラン）を作成し課長と議論する', kpi: '次年度部門計画ドラフトの作成と提案', deadline: '半年以内' } },
+                    { id: 'q10', type: 'next', categoryIndex: 4, text: '【課長への準備】労務管理（ハラスメント防止、労働法規、メンタルヘルス）やコンプライアンスの知識を十分に備えている。', skillTag: '労務・リスクマネジメント', lowGoal: { title: '管理職に必要な労働法規・ハラスメント防止・心理的安全性構築の研修や書籍で体系的に学ぶ', kpi: 'マネジメント・労務関連の体系的学習の完了', deadline: '3ヶ月以内' } }
+                ]
+            },
+            section_manager: {
+                id: 'section_manager',
+                name: '課長',
+                nextRole: '部長',
+                icon: 'fa-briefcase',
+                badgeColor: 'bg-purple-100 text-purple-700',
+                shortDesc: '課の業績・予算・人材育成の全責任を担うミドルマネジメントの要',
+                mindsetShift: '「与えられた課の目標を達成する戦術責任者」から、「複数の課を束ね、全社戦略と市場環境から事業部の未来を創る戦略責任者（部長）」への視座向上が鍵です。',
+                radarCategories: ['課の業績・予算達成', '人材育成・評価・組織力', '部門間折衝・政治力', '中長期戦略・変革力', '次世代リーダー輩出'],
+                bottlenecks: ['短期目標と中長期施策のバランス', '係長・主任層の育成不足', '部門間のサイロ化・利害対立', '離職防止とエンゲージメント向上', '新規領域へのチャレンジ不足'],
+                questions: [
+                    { id: 'q1', type: 'current', categoryIndex: 0, text: '課の年間・四半期予算（売上・利益・コスト）に対して高い達成率を維持し、ブレない数値管理ができている。', skillTag: '予算・業績マネジメント', lowGoal: { title: '先行指標（パイプライン・活動量）のモニタリング体制を強化し、予算未達リスクを2ヶ月前に察知・対策する', kpi: '四半期予算の連続達成と予測精度95%以上', deadline: '半年以内' } },
+                    { id: 'q2', type: 'current', categoryIndex: 1, text: '公正な人事評価と質の高い1on1を通じて、課員それぞれのキャリア自律とエンゲージメントを高められている。', skillTag: '評価・エンゲージメント向上', lowGoal: { title: '評価面談を「査定の場」から「成長支援の場」へ刷新し、キャリア開発プランを全課員と合意する', kpi: '部門エンゲージメントスコアの向上・離職率低下', deadline: '半年以内' } },
+                    { id: 'q3', type: 'current', categoryIndex: 4, text: '自分が現場に介入しなくても課が自走するよう、係長・主任クラスに権限移譲しリーダーとして育てている。', skillTag: 'リーダー育成・権限移譲', lowGoal: { title: '係長・主任層に対して「リーダー育成メンタリング」を隔週で実施し、自分の後任候補を2名育てる', kpi: '次期課長・係長候補のサクセッションプラン策定', deadline: '半年以内' } },
+                    { id: 'q4', type: 'current', categoryIndex: 1, text: '心理的安全性が高く、かつ高い目標にストレッチして挑戦する組織風土（カルチャー）を課内に醸成できている。', skillTag: '組織風土・カルチャー醸成', lowGoal: { title: '失敗からの学びを称賛する仕組みや、課内のナレッジ共有会を定例化し、挑戦する文化を作る', kpi: '課内からの新規施策・改善提案数の倍増', deadline: '3ヶ月以内' } },
+                    { id: 'q5', type: 'current', categoryIndex: 2, text: '他部門の課長や関係部署と強固なネットワークを築き、自課だけでは解決できない課題を交渉・解決できている。', skillTag: '部門間ネゴシエーション', lowGoal: { title: '他部門の管理職と月1回の情報交換会を設定し、部門間の壁（サイロ）を超える共同施策を立ち上げる', kpi: '他部門連携による業務改革・共同案件の創出', deadline: '半年以内' } },
+                    // 次役職（部長）への準備度
+                    { id: 'q6', type: 'next', categoryIndex: 3, text: '【部長への準備】自課の最適（部分最適）にとらわれず、事業部全体・全社最適の視点から経営陣や部長へ提言できている。', skillTag: '全社最適・経営視座', lowGoal: { title: '自課の枠を超え、事業部全体の収益性を高めるための構造改革案やリソース再配分案を部長へ提言する', kpi: '事業部全体視点での戦略提言（半期に1回以上）', deadline: '半年以内' } },
+                    { id: 'q7', type: 'next', categoryIndex: 3, text: '【部長への準備】既存のやり方の延長線ではなく、市場トレンドやDX・AI活用を取り入れた「業務変革・新規価値創出」を主導している。', skillTag: 'イノベーション・変革主導', lowGoal: { title: 'AI・デジタル技術の導入やビジネスプロセス刷新により、課の生産性を抜本的に高める変革プロジェクトを完遂する', kpi: 'DX・業務変革による生産性20%向上または新企画創出', deadline: '半年以内' } },
+                    { id: 'q8', type: 'next', categoryIndex: 2, text: '【部長への準備】経営会議や役員へのプレゼンテーションにおいて、経営言語（ROI、資本効率、市場優位性）で議論し承認を得られている。', skillTag: '経営層への提言・折衝力', lowGoal: { title: '経営陣向けの報告・提案資料において、財務インパクトと中長期戦略との整合性を明確にしたストーリーを構築する', kpi: '役員・部長会議での重要案件承認獲得', deadline: '半年以内' } },
+                    { id: 'q9', type: 'next', categoryIndex: 4, text: '【部長への準備】複数の課や異なる職能（営業・開発・企画など）を横断して束ね、大きな事業成果を出すマネジメント経験がある。', skillTag: 'クロスファンクショナル統括', lowGoal: { title: '複数チームが関わる大型横断プロジェクトの統括リーダーを担い、異なる利害をまとめて成果を出す', kpi: '部門横断プロジェクトの統括と目標達成', deadline: '1年以内' } },
+                    { id: 'q10', type: 'next', categoryIndex: 0, text: '【部長への準備】3〜5年後の市場環境の変化を予測し、事業部のポートフォリオや必要な組織体制・人材要件を構想できている。', skillTag: '中期事業構想力', lowGoal: { title: '3年後の市場環境予測に基づく「中期事業部ビジョン＆組織再編プラン」を策定する', kpi: '3ヶ年事業・組織構想書の作成', deadline: '1年以内' } }
+                ]
+            },
+            department_director: {
+                id: 'department_director',
+                name: '部長',
+                nextRole: '会社役員',
+                icon: 'fa-building-user',
+                badgeColor: 'bg-amber-100 text-amber-800',
+                shortDesc: '部門全体の戦略策定・収益責任・組織デザインを担う上級マネジメント',
+                mindsetShift: '「一部門の長の代表（部門長）」から、「会社全体の企業価値・資本効率・ガバナンスに全責任を負う経営陣（会社役員）」への飛躍が役員登用の鍵です。',
+                radarCategories: ['事業部PL・収益最大化', '中期事業戦略・ポートフォリオ', '組織デザイン・課長育成', '全社経営参画・シナジー', '外部ネットワーク・変革力'],
+                bottlenecks: ['既存事業の成長鈍化・新規柱の不足', '優秀な課長（ミドル）の不足', '部門間の縄張り意識の打破', 'PL視点からBS/資本効率視点への移行', '業界構造変化への対応スピード'],
+                questions: [
+                    { id: 'q1', type: 'current', categoryIndex: 0, text: '事業部全体の売上・営業利益にコミットし、市場環境の変化に対しても機動的かつ柔軟にリソースを再配分できている。', skillTag: '事業部ポートフォリオ運営', lowGoal: { title: '事業部内の不採算領域の撤退・縮小基準を明確にし、成長領域へ人材と予算を大胆にシフトする', kpi: '事業部全体の営業利益率の改善目標達成', deadline: '半年以内' } },
+                    { id: 'q2', type: 'current', categoryIndex: 2, text: '各課長（ミドルマネージャー）に明確なミッションと権限を与え、自律的に強い組織を作る「マネージャーの育成」ができている。', skillTag: 'ミドルマネージャー育成', lowGoal: { title: '課長陣との月次戦略1on1を通じて経営視座を鍛え、次期部長候補（サクセサー）を明確に育成する', kpi: '次期部長候補2名の特定と権限移譲の推進', deadline: '半年以内' } },
+                    { id: 'q3', type: 'current', categoryIndex: 1, text: '3〜5年先を見据えた部門の中期経営計画を策定し、メンバーがワクワクするビジョンと戦略ストーリーを語れている。', skillTag: '部門ビジョン・中期戦略', lowGoal: { title: '部門の3ヶ年戦略をアップデートし、全社タウンホールや部門総会で自らの言葉で語り浸透させる', kpi: '中期戦略の理解度・共感度サーベイ85%以上', deadline: '3ヶ月以内' } },
+                    { id: 'q4', type: 'current', categoryIndex: 2, text: '戦略の実行に最適な組織構造の設計、重要ポストへの抜擢人事、および採用ブランディングを主導できている。', skillTag: '組織デザイン・戦略人事', lowGoal: { title: '事業戦略と連動した「人材ポートフォリオ計画」を人事部と連携して策定し、外部採用と抜擢配置を行う', kpi: '戦略ポジションの充足率100%と組織再編の実行', deadline: '半年以内' } },
+                    { id: 'q5', type: 'current', categoryIndex: 4, text: '社外の経営者、業界キーマン、パートナー企業との高度な人脈を持ち、アライアンスや事業機会を創出している。', skillTag: '社外アライアンス構築', lowGoal: { title: '業界団体や他社エグゼクティブとのネットワーキングを強化し、戦略的提携や共同事業の種を作る', kpi: '社外パートナーとの協業・アライアンス案件の創出', deadline: '1年以内' } },
+                    // 次役職（会社役員）への準備度
+                    { id: 'q6', type: 'next', categoryIndex: 3, text: '【役員への準備】自部門の利益代表ではなく、常に「全社の企業価値最大化」の立場から他部門の課題にも踏み込んで発言・行動している。', skillTag: '全社経営へのコミット', lowGoal: { title: '経営会議において自部門以外の議題にも積極的に提言し、全社横断の経営課題解決タスクフォースを主導する', kpi: '全社横断プロジェクトのオーナーシップ発揮', deadline: '半年以内' } },
+                    { id: 'q7', type: 'next', categoryIndex: 0, text: '【役員への準備】損益計算書（PL）だけでなく、貸借対照表（BS）、キャッシュフロー、投資対効果（ROIC・ROE）の視点で事業を評価できている。', skillTag: 'BS・資本効率マネジメント', lowGoal: { title: 'コーポレートファイナンスの視点を深め、事業投資判断や資産効率（ROIC）に基づく事業評価を導入する', kpi: '資本コストを意識した事業投資・撤退基準の運用', deadline: '半年以内' } },
+                    { id: 'q8', type: 'next', categoryIndex: 1, text: '【役員への準備】既存事業の延長ではなく、将来の会社の柱となる新規事業の創出やM&A・出資などの非連続な成長戦略を描けている。', skillTag: '非連続な成長戦略・新規事業', lowGoal: { title: '第2・第3の収益の柱となる新規事業開発、またはM&A・業務提携の具体案を策定し経営陣へ提案する', kpi: '新規事業・M&A検討パイプラインの構築と提案', deadline: '1年以内' } },
+                    { id: 'q9', type: 'next', categoryIndex: 3, text: '【役員への準備】コーポレートガバナンス、コンプライアンス、危機管理（リスクマネジメント）において経営陣と同等の責任感と知識がある。', skillTag: 'ガバナンス・全社危機管理', lowGoal: { title: '会社法・コーポレートガバナンス・全社BCP（事業継続計画）に関する知見を深め、部門リスク監査を強化する', kpi: 'エグゼクティブ向けガバナンス研修の受講とリスク体制整備', deadline: '半年以内' } },
+                    { id: 'q10', type: 'next', categoryIndex: 4, text: '【役員への準備】社長の経営哲学・ビジョンを誰よりも深く理解し、社長の参謀として厳しい経営判断を支える覚悟がある。', skillTag: 'トップマネジメント補佐・覚悟', lowGoal: { title: '社長・現役員との対話を増やし、全社が直面する最重要の経営アジェンダに対する解決シナリオを提示する', kpi: '経営トップへの全社戦略アジェンダ提言', deadline: '半年以内' } }
+                ]
+            },
+            executive: {
+                id: 'executive',
+                name: '会社役員',
+                nextRole: '会社社長',
+                icon: 'fa-chess-king',
+                badgeColor: 'bg-rose-100 text-rose-800',
+                shortDesc: '全社経営への参画、資本効率・企業価値の向上、ガバナンスを担う経営陣',
+                mindsetShift: '「管掌領域を持つボードメンバー（役員）」から、「すべての最終責任を一人で背負い、企業の存在意義（パーパス）と未来を決断する最高経営責任者（社長）」への覚悟が鍵です。',
+                radarCategories: ['全社企業価値・財務戦略', 'ポートフォリオ変革・投資判断', 'ガバナンス・ステークホルダー', '経営理念・カルチャー牽引', '社長補佐・最終決断の覚悟'],
+                bottlenecks: ['既存ビジネスモデルの陳腐化危機', '資本効率（ROE/ROIC）の改善', '次世代の経営人材（部長・役員候補）不足', '株主・市場からの期待への対応', '全社カルチャーの変革スピード'],
+                questions: [
+                    { id: 'q1', type: 'current', categoryIndex: 0, text: '管掌領域のみならず、全社の財務諸表（PL/BS/CF）と資本コストを常に把握し、企業価値向上に直結する経営判断を下している。', skillTag: '財務戦略・企業価値向上', lowGoal: { title: '全社のROICツリー（資本効率）とキャッシュアロケーションを精査し、企業価値を高める財務・事業施策を実行する', kpi: '全社ROE/ROIC目標の達成とフリーCFの最大化', deadline: '半年以内' } },
+                    { id: 'q2', type: 'current', categoryIndex: 1, text: '長期的なメガトレンドを見据え、全社の事業ポートフォリオの入れ替え（成長投資・M&A・不採算撤退）を取締役会で主導している。', skillTag: '事業ポートフォリオ変革', lowGoal: { title: '5〜10年後の市場構造を見据えた事業ポートフォリオ再編案（M&A・撤退含む）をボードメンバーと策定・推進する', kpi: '成長領域への投資シフトとポートフォリオ変革の実行', deadline: '1年以内' } },
+                    { id: 'q3', type: 'current', categoryIndex: 2, text: '株主・投資家・金融機関・主要取引先などの多様なステークホルダーと対話し、会社の信頼と評価を高められている。', skillTag: 'ステークホルダー・エンゲージメント', lowGoal: { title: '金融機関・株主・主要パートナーとの対話（IR/SR活動）に積極的に関与し、外部視点を取り入れた経営改善を行う', kpi: '主要ステークホルダーとの対話実施と経営への反映', deadline: '半年以内' } },
+                    { id: 'q4', type: 'current', categoryIndex: 3, text: '執行部門の部長陣を束ね、セクショナリズムを排した全社シナジーと高い組織エンゲージメントを実現している。', skillTag: '全社組織統括・シナジー創出', lowGoal: { title: '部門長会議のあり方を変革し、部門間の壁を壊して全社横断でイノベーションが生まれる仕組みを構築する', kpi: '部門横断による新規収益機会の創出と組織活性度向上', deadline: '半年以内' } },
+                    { id: 'q5', type: 'current', categoryIndex: 2, text: '全社のリスクマネジメント（法務、情報セキュリティ、ESG、レピュテーションリスク）に目を光らせ、健全なガバナンスを機能させている。', skillTag: 'コーポレートガバナンス強化', lowGoal: { title: '全社リスクマップの抜本的見直しとクライシスマネジメント体制（緊急時対応訓練）の高度化を主導する', kpi: '重大コンプライアンス違反ゼロとガバナンス体制の強化', deadline: '半年以内' } },
+                    // 次役職（会社社長）への準備度
+                    { id: 'q6', type: 'next', categoryIndex: 4, text: '【社長への準備】社長の単なるイエスマンにならず、時に建設的な反対意見（健全な牽制）を述べつつ、決定後は全力で社長を支え抜いている。', skillTag: '最高参謀としての諫言と遂行', lowGoal: { title: '社長との1on1で全社の中長期リスクや見落とされがちな論点を忌憚なく提起し、同時に最難関の経営課題を自ら引き受ける', kpi: '最重要経営アジェンダの完遂とトップとの戦略合意', deadline: '半年以内' } },
+                    { id: 'q7', type: 'next', categoryIndex: 3, text: '【社長への準備】「なぜ我が社が社会に存在するのか（パーパス）」を自らの哲学とストーリーで語り、全社員の心を動かす発信力がある。', skillTag: '経営哲学・ビジョナリー発信', lowGoal: { title: '自らの経営哲学・自社の10年後のビジョンを言語化し、社内イベントや社外発信を通じて求心力を高める', kpi: '全社員向けビジョン発信と社内外からの共感獲得', deadline: '半年以内' } },
+                    { id: 'q8', type: 'next', categoryIndex: 4, text: '【社長への準備】正解のない不確実な局面において、誰のせいにもせず「最後の責任はすべて自分が取る」という孤独な決断を下す覚悟がある。', skillTag: '最終意思決定の覚悟', lowGoal: { title: '全社の命運を左右する大型投資や構造改革プロジェクトの最高責任者を担い、退路を断って成果を出し切る', kpi: '全社変革プロジェクトの最高責任者としての完遂', deadline: '1年以内' } },
+                    { id: 'q9', type: 'next', categoryIndex: 1, text: '【社長への準備】次世代の役員候補・部長候補を見出し、10年後も会社が成長し続けるための「経営人材パイプライン」を構築している。', skillTag: '次世代経営陣の育成', lowGoal: { title: '次世代リーダー選抜塾（経営人材育成プログラム）を立ち上げ、自らメンターとなって次期ボードメンバーを鍛える', kpi: '次世代経営人材プール（候補者群）の確立と育成', deadline: '1年以内' } },
+                    { id: 'q10', type: 'next', categoryIndex: 2, text: '【社長への準備】業界全体や社会課題に対する高い視座を持ち、自社の枠を超えて業界・地域・社会をリードする構想力がある。', skillTag: '社会・業界を牽引する構想力', lowGoal: { title: '他社経営トップや異業種リーダーとのネットワークを広げ、社会課題解決と事業成長を両立する未来構想を描く', kpi: '社外経営者ネットワークの拡大と中長期ビジョンの策定', deadline: '1年以内' } }
+                ]
+            },
+            president: {
+                id: 'president',
+                name: '会社社長',
+                nextRole: 'ビジョナリー経営・永続的企業価値の創出（次世代承継）',
+                icon: 'fa-crown',
+                badgeColor: 'bg-amber-200 text-amber-900',
+                shortDesc: '最高経営責任者として理念の体現、企業価値の最大化、そして次世代への承継を担う',
+                mindsetShift: '「自分が先頭に立って引っ張るカリスマ経営」から、「自らが不在でも理念と仕組みで永続的に発展し続けるビジョナリーカンパニーの創り手」への昇華が次のステージです。',
+                radarCategories: ['理念・パーパス浸透', '持続的企業価値・財務基盤', 'ビジネスモデル変革・未来投資', '経営チーム構築・権限移譲', '後継者育成・サクセッション'],
+                bottlenecks: ['社長自身への意思決定の過度な集中', '次世代の社長候補（サクセサー）の育成', '10年後の主力となる新規事業の柱', '創業精神・企業文化の風化防止', '資本市場・社会からの要請への対応'],
+                questions: [
+                    { id: 'q1', type: 'current', categoryIndex: 0, text: '企業の存在意義（パーパス・経営理念）を明確に定義し、日々の経営判断や全社員の行動指針として隅々まで浸透させている。', skillTag: 'パーパス・経営理念の浸透', lowGoal: { title: '経営理念と中期戦略を一貫したストーリーとして再定義し、全社員との対話会（タウンホール）や評価制度へ完全に連動させる', kpi: '理念共感度サーベイの向上と理念体現事例の創出', deadline: '半年以内' } },
+                    { id: 'q2', type: 'current', categoryIndex: 1, text: 'いかなる経済危機や外部環境の変化にも揺るがない、強固な財務基盤（自己資本・手元流動性）と高収益体質を確立している。', skillTag: '強靭な財務基盤と高収益化', lowGoal: { title: '不況耐性を高める財務ストレステストの実施と、高付加価値化による損益分岐点の引き下げ・利益率向上を断行する', kpi: '目標ROE/営業利益率の達成と強固な財務体質の確立', deadline: '1年以内' } },
+                    { id: 'q3', type: 'current', categoryIndex: 2, text: '現在の主力事業の寿命を冷静に見極め、10年後・20年後も会社を牽引する「次世代ビジネスモデル・未来投資」に資源を投下している。', skillTag: '未来への事業創生・変革', lowGoal: { title: '社長直轄の未来創造（R&D・新規事業・M&A）予算枠を確保し、既存事業とは異なる新しい収益の柱を立ち上げる', kpi: '次世代事業の立ち上げと中長期成長ロードマップの実行', deadline: '1年以内' } },
+                    { id: 'q4', type: 'current', categoryIndex: 3, text: '社長一人のワンマンに頼るのではなく、多様な強みを持つ優秀な役員陣（CXOチーム）に大胆に権限を委譲し、合議と迅速な執行を両立している。', skillTag: '最強の経営チーム（CXO）構築', lowGoal: { title: '社長自身の決裁権限の50%以上を各管掌役員へ委譲し、社長は「未来構想・理念浸透・重要人事」に集中する体制を作る', kpi: '役員への権限移譲推進と経営会議の戦略議論比率80%以上', deadline: '半年以内' } },
+                    { id: 'q5', type: 'current', categoryIndex: 1, text: '顧客、社員とその家族、取引先、株主、地域社会など、すべてのステークホルダーから「なくてはならない企業」として愛され信頼されている。', skillTag: 'マルチステークホルダー経営', lowGoal: { title: '人的資本経営（社員の幸福度・待遇向上）と社会価値創出の両立を掲げ、選ばれ続ける企業ブランドを確立する', kpi: '社員エンゲージメントおよび顧客推奨度（NPS）の最高水準達成', deadline: '1年以内' } },
+                    // 次ステップ（永続的発展・事業承継・グループ経営）への準備度
+                    { id: 'q6', type: 'next', categoryIndex: 4, text: '【永続的発展へ】5年後・10年を見据えた「次期社長候補（サクセサー）」を複数名特定し、修羅場経験や子会社経営などを通じて計画的に鍛えている。', skillTag: 'サクセッションプラン（後継者育成）', lowGoal: { title: '次期社長・次世代ボードメンバーの要件を定義し、候補者に新規事業や関連会社のトップを任せる育成計画を実行する', kpi: 'サクセッションプランの明文化と候補者への修羅場アサイン', deadline: '1年以内' } },
+                    { id: 'q7', type: 'next', categoryIndex: 0, text: '【永続的発展へ】仮に自分が明日現場を退いたとしても、理念とガバナンスと仕組みによって会社が自律的に成長し続ける体制ができている。', skillTag: '属人性を超えた「仕組み経営」', lowGoal: { title: '社長個人のカリスマや人脈に依存している領域（営業・採用・意思決定基準）を洗い出し、組織のシステム・明文化された基準へと昇華させる', kpi: '社長依存業務の解消と自走型経営システムの構築', deadline: '1年以内' } },
+                    { id: 'q8', type: 'next', categoryIndex: 3, text: '【永続的発展へ】社外取締役や外部の優れたアドバイザーの厳しい意見を謙虚に受け止め、「裸の王様」にならない健全な自己規律とガバナンスがある。', skillTag: 'トップの自己規律と外部ガバナンス', lowGoal: { title: '外部の経営メンターや社外有識者によるアドバイザリーボードを設け、自身の経営判断を客観的に検証する場を持つ', kpi: '外部有識者・ボードメンバーとの定期的な戦略レビュー実施', deadline: '半年以内' } },
+                    { id: 'q9', type: 'next', categoryIndex: 2, text: '【永続的発展へ】単一企業の成長にとどまらず、グループ経営化、エコシステム形成、または社会インフラとしての価値創造へ視座を広げている。', skillTag: 'エコシステム・グループ経営構想', lowGoal: { title: '自社のコアコンピタンスを核に、M&Aやスタートアップ連携・グループ分社化を含めた「企業生態系（エコシステム）構想」を策定する', kpi: '長期グループ経営・エコシステム構想の策定と実行', deadline: '1年以内' } },
+                    { id: 'q10', type: 'next', categoryIndex: 4, text: '【永続的発展へ】経営者自身の心身の健康、知的好奇心、大局観を常に最高の状態に保ち、エネルギーに満ちた状態で未来を構想する余白（時間）がある。', skillTag: 'トップのウェルビーイングと大局観', lowGoal: { title: '日常のオペレーションから完全に離れて未来を思索する「戦略的余白（オフサイト・読書・視察）」を毎月計画的に確保する', kpi: '月2日以上の未来構想・インプット専念日の確保', deadline: '1ヶ月以内' } }
+                ]
+            }
+        };
+
+        const ROLE_ORDER = ['staff', 'chief', 'subsection_chief', 'section_manager', 'department_director', 'executive', 'president'];
+
+        // Application State with 360-degree ratings (self, boss, sub)
+        let appState = {
+            currentStep: 1,
+            selectedRoleId: 'staff',
+            activeRater: 'self', // 'self' | 'boss' | 'sub'
+            answers: {
+                self: {}, // { q1: 3, q2: 4, ... }
+                boss: {}, // { q1: 3, q2: 3, ... }
+                sub: {}   // { q1: 4, q2: 3, ... }
+            },
+            selectedBottlenecks: [],
+            customIssue: '',
+            goals: [],
+            commitmentMemo: '',
+            currentFilter: 'all'
+        };
+
+        let radarChartInstance = null;
+
+        // Helper to ensure answers structure is valid (for backward compatibility with v1 storage)
+        function normalizeAnswersState() {
+            if (!appState.answers || typeof appState.answers.self !== 'object') {
+                const oldAnswers = appState.answers || {};
+                appState.answers = {
+                    self: { ...oldAnswers },
+                    boss: { ...oldAnswers },
+                    sub: { ...oldAnswers }
+                };
+            }
+            if (!appState.activeRater) {
+                appState.activeRater = 'self';
+            }
+        }
+
+        // Get contextual labels for Boss and Subordinate depending on role
+        function getRaterLabels(roleId) {
+            if (roleId === 'staff') {
+                return { boss: '上司・先輩からの評価', sub: '後輩・同僚からの評価' };
+            } else if (roleId === 'president') {
+                return { boss: '株主・社外役員からの評価', sub: '役員・社員からの評価' };
+            } else if (roleId === 'executive') {
+                return { boss: '社長・取締役会からの評価', sub: '部長・社員からの評価' };
+            }
+            return { boss: '上司からの評価', sub: '部下からの評価' };
+        }
+
+        // Initialize App on Load
+        window.onload = function() {
+            loadStateFromStorage();
+            normalizeAnswersState();
+            renderRoleCards();
+            selectRole(appState.selectedRoleId, false);
+            
+            // Restore if already on Step 2 or Step 3
+            if (appState.currentStep === 2) {
+                goToStep2(false);
+            } else if (appState.currentStep === 3 && Object.keys(appState.answers.self).length === 10) {
+                renderStep3Results();
+                showStepUI(3);
+            }
+        };
+
+        function renderRoleCards() {
+            const grid = document.getElementById('role-grid');
+            grid.innerHTML = '';
+
+            ROLE_ORDER.forEach((roleId, index) => {
+                const role = ROLES_DATA[roleId];
+                const isSelected = appState.selectedRoleId === roleId;
+                
+                const card = document.createElement('div');
+                card.id = `role-card-${roleId}`;
+                card.className = `role-card cursor-pointer rounded-2xl p-5 bg-white border-2 ${isSelected ? 'selected' : 'border-slate-200 hover:border-indigo-300'} flex flex-col justify-between`;
+                card.onclick = () => selectRole(roleId, true);
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${role.badgeColor}">
+                                LEVEL ${index + 1}
+                            </span>
+                            <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
+                                <i class="fa-solid ${role.icon}"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800">${role.name}</h3>
+                        <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">${role.shortDesc}</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <span class="text-slate-400 font-medium">次の目標ステップ:</span>
+                        <span class="font-bold text-indigo-600 flex items-center gap-1">
+                            ${role.nextRole.length > 8 ? '永続的発展・承継' : role.nextRole}
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function selectRole(roleId, resetAnswersIfChanged = true) {
+            const previousRole = appState.selectedRoleId;
+            appState.selectedRoleId = roleId;
+
+            if (resetAnswersIfChanged && previousRole !== roleId) {
+                appState.answers = { self: {}, boss: {}, sub: {} };
+                appState.selectedBottlenecks = [];
+                appState.customIssue = '';
+                appState.goals = [];
+            }
+
+            // Update card visual states
+            ROLE_ORDER.forEach(id => {
+                const el = document.getElementById(`role-card-${id}`);
+                if (el) {
+                    if (id === roleId) {
+                        el.classList.add('selected');
+                        el.classList.remove('border-slate-200');
+                    } else {
+                        el.classList.remove('selected');
+                        el.classList.add('border-slate-200');
+                    }
+                }
+            });
+
+            // Update preview box
+            const role = ROLES_DATA[roleId];
+            const previewBox = document.getElementById('role-preview-box');
+            previewBox.classList.remove('hidden');
+            document.getElementById('preview-role-title').textContent = `${role.name} としての現状診断と目標設定`;
+            document.getElementById('preview-next-badge').innerHTML = `<i class="fa-solid fa-Up-long mr-1"></i>次ステップ: ${role.nextRole}`;
+            document.getElementById('preview-role-desc').textContent = role.mindsetShift;
+
+            saveStateToStorage();
+        }
+
+        function goToStep2(resetDefault = true) {
+            const role = ROLES_DATA[appState.selectedRoleId];
+            document.getElementById('step2-role-badge').textContent = `${role.name} → ${role.nextRole}`;
+
+            const raterLabels = getRaterLabels(appState.selectedRoleId);
+            document.getElementById('rater-label-boss').textContent = `2. ${raterLabels.boss}`;
+            document.getElementById('rater-label-sub').textContent = `3. ${raterLabels.sub}`;
+
+            // Initialize default answers if empty so user can smoothly compare all 3 perspectives immediately
+            if (Object.keys(appState.answers.self).length === 0 && resetDefault) {
+                role.questions.forEach((q, idx) => {
+                    appState.answers.self[q.id] = 3;
+                    // Provide realistic slight variance for boss and subordinate defaults
+                    appState.answers.boss[q.id] = idx >= 5 ? 2 : 3;
+                    appState.answers.sub[q.id] = (idx % 2 === 0) ? 3 : 4;
+                });
+            }
+
+            renderQuestions(role);
+            switchRaterTab(appState.activeRater || 'self');
+            renderBottleneckTags(role);
+            document.getElementById('custom-issue-input').value = appState.customIssue || '';
+            updateAnsweredCount();
+            showStepUI(2);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchRaterTab(raterKey) {
+            appState.activeRater = raterKey;
+            const role = ROLES_DATA[appState.selectedRoleId];
+            const labels = getRaterLabels(appState.selectedRoleId);
+
+            const tabSelf = document.getElementById('rater-tab-self');
+            const tabBoss = document.getElementById('rater-tab-boss');
+            const tabSub = document.getElementById('rater-tab-sub');
+            const banner = document.getElementById('active-rater-banner');
+            const desc = document.getElementById('active-rater-desc');
+
+            // Reset classes
+            tabSelf.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-white text-slate-600 border-slate-200 hover:border-indigo-400';
+            tabBoss.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-white text-slate-600 border-slate-200 hover:border-emerald-400';
+            tabSub.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-white text-slate-600 border-slate-200 hover:border-amber-400';
+
+            if (raterKey === 'self') {
+                tabSelf.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-indigo-600 text-white border-indigo-600 shadow-sm';
+                banner.className = 'mt-2.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-800 text-xs font-medium flex items-center justify-between';
+                desc.innerHTML = `<i class="fa-solid fa-user mr-1.5"></i>現在は<strong>「自己評価」</strong>モードです。あなた自身の自己認識で1〜5を選択してください。`;
+            } else if (raterKey === 'boss') {
+                tabBoss.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-emerald-600 text-white border-emerald-600 shadow-sm';
+                banner.className = 'mt-2.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-medium flex items-center justify-between';
+                desc.innerHTML = `<i class="fa-solid fa-user-tie mr-1.5"></i>現在は<strong>「${labels.boss}」</strong>モードです。上司から実際に受けた評価、または上司目線での厳しい評価を入力してください。`;
+            } else {
+                tabSub.className = 'py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition border-2 bg-amber-600 text-white border-amber-600 shadow-sm';
+                banner.className = 'mt-2.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-900 text-xs font-medium flex items-center justify-between';
+                desc.innerHTML = `<i class="fa-solid fa-users mr-1.5"></i>現在は<strong>「${labels.sub}」</strong>モードです。部下や後輩・周囲のメンバーから見たあなたの評価を入力してください。`;
+            }
+
+            // Refresh active button highlights for all questions
+            role.questions.forEach(q => {
+                refreshQuestionButtonsUI(q.id);
+            });
+            saveStateToStorage();
+        }
+
+        function fillMock360Scores() {
+            const role = ROLES_DATA[appState.selectedRoleId];
+            role.questions.forEach((q, idx) => {
+                const selfScore = appState.answers.self[q.id] || 4;
+                appState.answers.self[q.id] = selfScore;
+                // Create realistic 360-degree gap patterns (e.g., boss stricter on next-step strategy, subordinates stricter on delegation/coaching)
+                if (q.type === 'next') {
+                    appState.answers.boss[q.id] = Math.max(1, selfScore - 1);
+                    appState.answers.sub[q.id] = idx % 2 === 0 ? Math.max(1, selfScore - 1) : Math.min(5, selfScore);
+                } else {
+                    appState.answers.boss[q.id] = Math.min(5, selfScore);
+                    appState.answers.sub[q.id] = idx === 1 || idx === 3 ? Math.max(1, selfScore - 1) : Math.min(5, selfScore + 1);
+                }
+                refreshQuestionButtonsUI(q.id);
+            });
+            updateAnsweredCount();
+            saveStateToStorage();
+            showToast('上司評価・部下評価のリアルな比較サンプルを反映しました');
+        }
+
+        function renderQuestions(role) {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+
+            const ratingLabels = [
+                { val: 1, label: '1: 全くできていない' },
+                { val: 2, label: '2: あまりできていない' },
+                { val: 3, label: '3: どちらともいえない' },
+                { val: 4, label: '4: ある程度できている' },
+                { val: 5, label: '5: 十分にできている' }
+            ];
+
+            role.questions.forEach((q, idx) => {
+                const isNextStepQ = q.type === 'next';
+
+                // Section Header before Q1 and Q6
+                if (idx === 0) {
+                    const header1 = document.createElement('div');
+                    header1.className = 'bg-slate-100 px-4 py-2.5 rounded-xl border-l-4 border-slate-700 font-bold text-sm text-slate-800';
+                    header1.innerHTML = `<i class="fa-solid fa-layer-group mr-2 text-slate-600"></i>Part 1: 現在の役職（${role.name}）における役割完遂度の確認（Q1〜Q5）`;
+                    container.appendChild(header1);
+                } else if (idx === 5) {
+                    const header2 = document.createElement('div');
+                    header2.className = 'bg-indigo-50 px-4 py-2.5 rounded-xl border-l-4 border-indigo-600 font-bold text-sm text-indigo-900 mt-8';
+                    header2.innerHTML = `<i class="fa-solid fa-rocket mr-2 text-indigo-600"></i>Part 2: 次のステップ（${role.nextRole}）に向けた準備度・視座の確認（Q6〜Q10）`;
+                    container.appendChild(header2);
+                }
+
+                const qBlock = document.createElement('div');
+                qBlock.className = `p-5 rounded-2xl border ${isNextStepQ ? 'border-indigo-100 bg-indigo-50/30' : 'border-slate-200 bg-slate-50/50'}`;
+
+                let buttonsHtml = '';
+                ratingLabels.forEach(r => {
+                    buttonsHtml += `
+                        <button type="button" onclick="setAnswer('${q.id}', ${r.val})" id="btn-${q.id}-${r.val}"
+                            class="rating-btn flex-1 py-2.5 px-2 rounded-xl border text-xs sm:text-sm font-semibold flex flex-col items-center justify-center gap-1 bg-white text-slate-700 border-slate-300 hover:bg-slate-100">
+                            <span class="text-base font-bold">${r.val}</span>
+                            <span class="text-[10px] sm:text-xs font-normal opacity-90 hidden sm:inline">${r.label.split(': ')[1]}</span>
+                        </button>
+                    `;
+                });
+
+                qBlock.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-md text-xs font-bold ${isNextStepQ ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-white'}">Q${idx + 1}</span>
+                            <span class="text-xs font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">${q.skillTag}</span>
+                        </div>
+                        <!-- 3-Perspective Badges for Quick Comparison -->
+                        <div class="flex items-center gap-1.5 text-xs">
+                            <button type="button" onclick="switchRaterTab('self')" class="px-2 py-0.5 rounded-md font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
+                                自己: <span id="badge-self-${q.id}">${appState.answers.self[q.id] || '-'}</span>
+                            </button>
+                            <button type="button" onclick="switchRaterTab('boss')" class="px-2 py-0.5 rounded-md font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">
+                                上司: <span id="badge-boss-${q.id}">${appState.answers.boss[q.id] || '-'}</span>
+                            </button>
+                            <button type="button" onclick="switchRaterTab('sub')" class="px-2 py-0.5 rounded-md font-bold bg-amber-100 text-amber-800 hover:bg-amber-200 transition">
+                                部下: <span id="badge-sub-${q.id}">${appState.answers.sub[q.id] || '-'}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-sm sm:text-base font-semibold text-slate-800 mb-4 leading-relaxed">${q.text}</p>
+                    <div class="flex items-center gap-2">
+                        ${buttonsHtml}
+                    </div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mt-1.5 sm:hidden px-1">
+                        <span>全くできていない</span>
+                        <span>十分にできている</span>
+                    </div>
+                `;
+                container.appendChild(qBlock);
+                refreshQuestionButtonsUI(q.id);
+            });
+        }
+
+        function refreshQuestionButtonsUI(qId) {
+            const activeRater = appState.activeRater || 'self';
+            const currentVal = appState.answers[activeRater][qId] || 0;
+            const activeClassMap = {
+                self: 'active-self',
+                boss: 'active-boss',
+                sub: 'active-sub'
+            };
+
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.getElementById(`btn-${qId}-${i}`);
+                if (btn) {
+                    btn.classList.remove('active-self', 'active-boss', 'active-sub', 'bg-white', 'text-slate-700', 'border-slate-300');
+                    if (i === currentVal) {
+                        btn.classList.add(activeClassMap[activeRater]);
+                    } else {
+                        btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
+                    }
+                }
+            }
+
+            // Update mini badges
+            const bSelf = document.getElementById(`badge-self-${qId}`);
+            const bBoss = document.getElementById(`badge-boss-${qId}`);
+            const bSub = document.getElementById(`badge-sub-${qId}`);
+            if (bSelf) bSelf.textContent = appState.answers.self[qId] || '-';
+            if (bBoss) bBoss.textContent = appState.answers.boss[qId] || '-';
+            if (bSub) bSub.textContent = appState.answers.sub[qId] || '-';
+        }
+
+        function setAnswer(qId, val) {
+            const activeRater = appState.activeRater || 'self';
+            appState.answers[activeRater][qId] = val;
+            refreshQuestionButtonsUI(qId);
+            updateAnsweredCount();
+            saveStateToStorage();
+        }
+
+        function updateAnsweredCount() {
+            const sCount = Object.keys(appState.answers.self || {}).length;
+            const bCount = Object.keys(appState.answers.boss || {}).length;
+            const subCount = Object.keys(appState.answers.sub || {}).length;
+            const sEl = document.getElementById('answered-self-count');
+            const bEl = document.getElementById('answered-boss-count');
+            const subEl = document.getElementById('answered-sub-count');
+            if (sEl) sEl.textContent = sCount;
+            if (bEl) bEl.textContent = bCount;
+            if (subEl) subEl.textContent = subCount;
+        }
+
+        function renderBottleneckTags(role) {
+            const tagContainer = document.getElementById('bottleneck-tags');
+            tagContainer.innerHTML = '';
+
+            role.bottlenecks.forEach(tag => {
+                const isSelected = appState.selectedBottlenecks.includes(tag);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
+                    isSelected 
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' 
+                    : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'
+                }`;
+                btn.innerHTML = `<i class="fa-solid ${isSelected ? 'fa-check' : 'fa-plus'} mr-1 text-[10px]"></i>${tag}`;
+                btn.onclick = () => {
+                    if (appState.selectedBottlenecks.includes(tag)) {
+                        appState.selectedBottlenecks = appState.selectedBottlenecks.filter(t => t !== tag);
+                    } else {
+                        appState.selectedBottlenecks.push(tag);
+                    }
+                    renderBottleneckTags(role);
+                    saveStateToStorage();
+                };
+                tagContainer.appendChild(btn);
+            });
+        }
+
+        function completeAssessment() {
+            const role = ROLES_DATA[appState.selectedRoleId];
+            appState.customIssue = document.getElementById('custom-issue-input').value.trim();
+
+            // Ensure all 10 questions have an answer for all 3 raters
+            role.questions.forEach(q => {
+                if (!appState.answers.self[q.id]) appState.answers.self[q.id] = 3;
+                if (!appState.answers.boss[q.id]) appState.answers.boss[q.id] = appState.answers.self[q.id];
+                if (!appState.answers.sub[q.id]) appState.answers.sub[q.id] = appState.answers.self[q.id];
+            });
+
+            // Generate goals based on 360 answers, perception gaps, and bottlenecks
+            generateRecommendedGoals(role);
+
+            // Render Step 3
+            renderStep3Results();
+            showStepUI(3);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('360°評価の分析とスキルアップ目標を生成しました');
+        }
+
+        function generateRecommendedGoals(role) {
+            const newGoals = [];
+            const raterLabels = getRaterLabels(appState.selectedRoleId);
+
+            // 1. Identify Perception Gap Goals (Where Self > Boss or Self > Sub by >= 1 point)
+            role.questions.forEach(q => {
+                const sVal = appState.answers.self[q.id] || 3;
+                const bVal = appState.answers.boss[q.id] || 3;
+                const subVal = appState.answers.sub[q.id] || 3;
+
+                if (sVal - bVal >= 1 && newGoals.filter(g => g.category === 'gap_fix').length < 2) {
+                    newGoals.push({
+                        id: 'goal_gap_boss_' + q.id,
+                        category: 'gap_fix',
+                        categoryLabel: `上司評価ギャップ解消（自己${sVal} / 上司${bVal}）`,
+                        skillTag: q.skillTag,
+                        priority: '最優先',
+                        title: `【対上司ギャップ解消】「${q.skillTag}」において上司の期待水準と自己認識にズレがあります。${q.lowGoal.title}`,
+                        kpi: `${q.lowGoal.kpi}（1on1で上司と達成基準をすり合わせる）`,
+                        deadline: q.lowGoal.deadline,
+                        completed: false
+                    });
+                } else if (sVal - subVal >= 1 && newGoals.filter(g => g.category === 'gap_fix').length < 3) {
+                    newGoals.push({
+                        id: 'goal_gap_sub_' + q.id,
+                        category: 'gap_fix',
+                        categoryLabel: `部下評価ギャップ解消（自己${sVal} / 部下${subVal}）`,
+                        skillTag: q.skillTag,
+                        priority: '最優先',
+                        title: `【対部下ギャップ解消】「${q.skillTag}」においてメンバーの納得感を高めるため、${q.lowGoal.title}`,
+                        kpi: `${q.lowGoal.kpi}（現場メンバーからのフィードバック確認）`,
+                        deadline: q.lowGoal.deadline,
+                        completed: false
+                    });
+                }
+            });
+
+            // 2. Sort questions by lowest 360 average score
+            const sortedQuestions = [...role.questions].sort((a, b) => {
+                const avgA = ((appState.answers.self[a.id]||3) + (appState.answers.boss[a.id]||3) + (appState.answers.sub[a.id]||3)) / 3;
+                const avgB = ((appState.answers.self[b.id]||3) + (appState.answers.boss[b.id]||3) + (appState.answers.sub[b.id]||3)) / 3;
+                return avgA - avgB;
+            });
+
+            sortedQuestions.forEach(q => {
+                const alreadyAdded = newGoals.some(g => g.id.endsWith(q.id));
+                if (alreadyAdded) return;
+
+                const sVal = appState.answers.self[q.id] || 3;
+                const bVal = appState.answers.boss[q.id] || 3;
+                const subVal = appState.answers.sub[q.id] || 3;
+                const avgScore = (sVal + bVal + subVal) / 3;
+
+                if (avgScore <= 3.3 || newGoals.length < 6) {
+                    const priorityLabel = avgScore <= 2.5 ? '最優先' : (avgScore <= 3.3 ? '重要' : 'さらなる強化');
+                    newGoals.push({
+                        id: 'goal_' + q.id,
+                        category: q.type === 'next' ? 'next_step' : 'current_role',
+                        categoryLabel: q.type === 'next' ? `昇進準備（${role.nextRole}視座）` : `現役職（${role.name}）の基盤`,
+                        skillTag: `${q.skillTag} (360°平均:${avgScore.toFixed(1)})`,
+                        priority: priorityLabel,
+                        title: q.lowGoal.title,
+                        kpi: q.lowGoal.kpi,
+                        deadline: q.lowGoal.deadline,
+                        completed: false
+                    });
+                }
+            });
+
+            // 3. If user selected specific bottleneck tags or wrote custom issue, add a tailored goal
+            if (appState.selectedBottlenecks.length > 0 || appState.customIssue) {
+                const focusIssue = appState.customIssue || `「${appState.selectedBottlenecks.join('・')}」の解消`;
+                newGoals.unshift({
+                    id: 'goal_bottleneck_custom',
+                    category: 'next_step',
+                    categoryLabel: '現状の課題・ボトルネック突破',
+                    skillTag: '重点課題解決',
+                    priority: '最優先',
+                    title: `【現状の課題突破】${focusIssue}に向けた具体策を上長・チームと合意し実行する`,
+                    kpi: '月次での課題解消レビューと行動改善',
+                    deadline: '1ヶ月以内',
+                    completed: false
+                });
+            }
+
+            appState.goals = newGoals;
+
+            // Default Commitment Memo
+            appState.commitmentMemo = `現在【${role.name}】として、自己評価だけでなく「${raterLabels.boss}」「${raterLabels.sub}」との認識ギャップを謙虚に受け止め、半年〜1年以内に周囲から信頼される【${role.nextRole}】の基準へ到達するため、上記の優先アクションプランを完遂します。`;
+            saveStateToStorage();
+        }
+
+        function renderStep3Results() {
+            const role = ROLES_DATA[appState.selectedRoleId];
+            const raterLabels = getRaterLabels(appState.selectedRoleId);
+            const today = new Date();
+            document.getElementById('report-date').textContent = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日 診断`;
+            document.getElementById('result-current-role').textContent = role.name;
+            document.getElementById('result-next-role').textContent = role.nextRole;
+
+            // Calculate Scores for Self, Boss, Subordinate
+            let sumSelf = 0, sumBoss = 0, sumSub = 0;
+            const catSelf = [0, 0, 0, 0, 0];
+            const catBoss = [0, 0, 0, 0, 0];
+            const catSub = [0, 0, 0, 0, 0];
+            const catCounts = [0, 0, 0, 0, 0];
+
+            let maxBossGapQ = role.questions[0], maxBossGapVal = -99;
+            let maxSubGapQ = role.questions[0], maxSubGapVal = -99;
+
+            role.questions.forEach(q => {
+                const s = appState.answers.self[q.id] || 3;
+                const b = appState.answers.boss[q.id] || 3;
+                const sub = appState.answers.sub[q.id] || 3;
+
+                sumSelf += s;
+                sumBoss += b;
+                sumSub += sub;
+
+                catSelf[q.categoryIndex] += s;
+                catBoss[q.categoryIndex] += b;
+                catSub[q.categoryIndex] += sub;
+                catCounts[q.categoryIndex] += 1;
+
+                // Track where Self overestimates compared to Boss / Sub most
+                if ((s - b) > maxBossGapVal) {
+                    maxBossGapVal = s - b;
+                    maxBossGapQ = q;
+                }
+                if ((s - sub) > maxSubGapVal) {
+                    maxSubGapVal = s - sub;
+                    maxSubGapQ = q;
+                }
+            });
+
+            const self100 = Math.round((sumSelf / 50) * 100);
+            const boss100 = Math.round((sumBoss / 50) * 100);
+            const sub100 = Math.round((sumSub / 50) * 100);
+            // Weighted 360 Readiness Score (Self 30%, Boss 40%, Sub 30%)
+            const totalScore100 = Math.round(self100 * 0.3 + boss100 * 0.4 + sub100 * 0.3);
+
+            document.getElementById('self-score-val').textContent = self100;
+            document.getElementById('boss-score-val').textContent = boss100;
+            document.getElementById('sub-score-val').textContent = sub100;
+            document.getElementById('total-score-val').textContent = totalScore100;
+
+            const readinessBadge = document.getElementById('readiness-badge');
+            if (totalScore100 >= 80) {
+                readinessBadge.textContent = '360°昇進準備：極めて良好';
+                readinessBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-400/20 text-emerald-300';
+            } else if (totalScore100 >= 60) {
+                readinessBadge.textContent = '360°昇進準備：順調（一部ギャップ解消）';
+                readinessBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300';
+            } else {
+                readinessBadge.textContent = '周囲からの信頼獲得・視座向上が急務';
+                readinessBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-400/20 text-rose-300';
+            }
+
+            // Summary Text
+            document.getElementById('result-summary-text').textContent = 
+                `自己評価は ${self100}点、${raterLabels.boss}は ${boss100}点、${raterLabels.sub}は ${sub100}点 です。${role.mindsetShift}`;
+
+            // Render 360-Degree Multi-Rater Insights
+            render360GapAnalysisCards(self100, boss100, sub100, maxBossGapQ, maxBossGapVal, maxSubGapQ, maxSubGapVal, raterLabels);
+
+            // Calculate average per radar category (scale 1-5) for all 3 raters
+            const avgSelf = catSelf.map((sum, idx) => catCounts[idx] > 0 ? Number((sum / catCounts[idx]).toFixed(1)) : 3);
+            const avgBoss = catBoss.map((sum, idx) => catCounts[idx] > 0 ? Number((sum / catCounts[idx]).toFixed(1)) : 3);
+            const avgSub = catSub.map((sum, idx) => catCounts[idx] > 0 ? Number((sum / catCounts[idx]).toFixed(1)) : 3);
+            const avgAll = avgSelf.map((s, idx) => Number(((s + avgBoss[idx] + avgSub[idx]) / 3).toFixed(1)));
+
+            // Render Category Comparison Table
+            renderCategoryComparisonTable(role.radarCategories, avgSelf, avgBoss, avgSub);
+
+            // Identify strongest and weakest categories based on 360 combined average
+            let maxIdx = 0, minIdx = 0;
+            avgAll.forEach((val, idx) => {
+                if (val > avgAll[maxIdx]) maxIdx = idx;
+                if (val < avgAll[minIdx]) minIdx = idx;
+            });
+
+            document.getElementById('strength-analysis').textContent = 
+                `3視点総合で「${role.radarCategories[maxIdx]}」（360°平均: ${avgAll[maxIdx]} / 自己:${avgSelf[maxIdx]}・上司:${avgBoss[maxIdx]}・部下:${avgSub[maxIdx]}）が最も高く評価されています。自他ともに認めるあなたのコアコンピタンス（強み）です。`;
+
+            document.getElementById('weakness-analysis').textContent = 
+                `3視点総合で「${role.radarCategories[minIdx]}」（360°平均: ${avgAll[minIdx]} / 自己:${avgSelf[minIdx]}・上司:${avgBoss[minIdx]}・部下:${avgSub[minIdx]}）が最大の強化ポイントです。${role.nextRole}への昇進に向けて優先的に改善しましょう。`;
+
+            document.getElementById('mindset-shift-title').textContent = `${role.name} から ${role.nextRole} への視座転換`;
+            document.getElementById('mindset-shift-desc').textContent = role.mindsetShift;
+
+            // Render 3-Series Radar Chart
+            renderRadarChart(role.radarCategories, avgSelf, avgBoss, avgSub);
+
+            // Render Goals & Memo
+            renderGoalsList();
+            document.getElementById('commitment-memo').value = appState.commitmentMemo || '';
+        }
+
+        function render360GapAnalysisCards(self100, boss100, sub100, maxBossGapQ, maxBossGapVal, maxSubGapQ, maxSubGapVal, raterLabels) {
+            const othersAvg = Math.round((boss100 + sub100) / 2);
+            const selfOthersDiff = self100 - othersAvg;
+
+            const patternBadge = document.getElementById('pattern-type-badge');
+            const patternDesc = document.getElementById('pattern-type-desc');
+            const diffValEl = document.getElementById('self-others-diff-val');
+
+            diffValEl.textContent = `${selfOthersDiff > 0 ? '+' : ''}${selfOthersDiff} pt (自己${self100} vs 他者平均${othersAvg})`;
+
+            // Determine 360 Balance Archetype
+            if (Math.abs(self100 - boss100) <= 6 && Math.abs(self100 - sub100) <= 6) {
+                patternBadge.textContent = '自己認識一致・バランス型';
+                patternBadge.className = 'inline-block px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold mb-2';
+                patternDesc.textContent = '自己評価と上司・部下からの評価のズレが小さく、客観的に自分の現在地を把握できています。周囲からの納得感が高い状態です。';
+            } else if (selfOthersDiff >= 8) {
+                patternBadge.textContent = '自己過大評価・裸の王様リスク型';
+                patternBadge.className = 'inline-block px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-bold mb-2';
+                patternDesc.textContent = '自分が思っている以上に、上司や部下からの評価が厳しい状態です。「できているつもり」になっている行動を見直し、周囲への傾聴が必要です。';
+            } else if (selfOthersDiff <= -8) {
+                patternBadge.textContent = '自己過小評価・謙虚（インポスター）型';
+                patternBadge.className = 'inline-block px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold mb-2';
+                patternDesc.textContent = '上司や部下からは高く評価されているのに、自分自身で過小評価しています。もっと自信を持って次の役職や大きな裁量に手を挙げて良い状態です。';
+            } else if (boss100 - sub100 >= 10) {
+                patternBadge.textContent = '上向き志向・現場負荷型（上司高/部下低）';
+                patternBadge.className = 'inline-block px-2.5 py-1 rounded-lg bg-amber-600 text-white text-xs font-bold mb-2';
+                patternDesc.textContent = '上司からのウケ・評価は高い一方で、部下や現場からの評価が低くなっています。現場のケアや心理的安全性、丁寧な権限移譲を意識してください。';
+            } else if (sub100 - boss100 >= 10) {
+                patternBadge.textContent = '現場寄り添い・視座不足型（部下高/上司低）';
+                patternBadge.className = 'inline-block px-2.5 py-1 rounded-lg bg-purple-600 text-white text-xs font-bold mb-2';
+                patternDesc.textContent = '部下や現場からは慕われていますが、上司からは「全社視点・数字へのコミット・次役職の視座が足りない」と見られています。上長との戦略すり合わせが必要です。';
+            } else {
+                patternBadge.textContent = '部分ギャップ・成長過渡期型';
+                patternBadge.className = 'inline-block px-2.5 py-1 rounded-lg bg-slate-700 text-white text-xs font-bold mb-2';
+                patternDesc.textContent = '特定のスキル領域によって上司・部下の評価が分かれています。下の領域別テーブルでギャップの大きい項目を特定し、対策を打ちましょう。';
+            }
+
+            // Boss Gap Analysis
+            const bossDiff = self100 - boss100;
+            const bossBadge = document.getElementById('boss-gap-badge');
+            const bossTitle = document.getElementById('boss-gap-title');
+            const bossDesc = document.getElementById('boss-gap-desc');
+            const bossMaxItem = document.getElementById('boss-max-gap-item');
+
+            bossBadge.textContent = `ギャップ: ${bossDiff > 0 ? '+' : ''}${bossDiff}pt`;
+            if (bossDiff >= 6) {
+                bossTitle.textContent = '上司の期待基準に対して自己評価が高めです';
+                bossDesc.textContent = 'あなたが「十分やっている」と感じている成果や視座も、上司からは「次の役職基準ではまだ物足りない」と見られています。求めるアウトプット水準を1on1で再定義しましょう。';
+            } else if (bossDiff <= -6) {
+                bossTitle.textContent = '上司はあなたの実力を自己評価以上に買っています';
+                bossDesc.textContent = '上司からの信頼は厚く、より高いレベルのミッションを任せたいと期待されています。遠慮せずに上位役職の業務を巻き取っていきましょう。';
+            } else {
+                bossTitle.textContent = '上司との認識はおおむね一致しています';
+                bossDesc.textContent = '現在の強みと課題について上司と共通認識が持てています。昇進に向けた具体的な要件（あと何を達成すれば昇進か）を明確に合意しましょう。';
+            }
+            bossMaxItem.innerHTML = `<i class="fa-solid fa-magnifying-glass mr-1"></i>最大の注目ギャップ項目: <strong>「${maxBossGapQ.skillTag}」</strong> (自己:${appState.answers.self[maxBossGapQ.id]} / 上司:${appState.answers.boss[maxBossGapQ.id]})`;
+
+            // Subordinate Gap Analysis
+            const subDiff = self100 - sub100;
+            const subBadge = document.getElementById('sub-gap-badge');
+            const subTitle = document.getElementById('sub-gap-title');
+            const subDesc = document.getElementById('sub-gap-desc');
+            const subMaxItem = document.getElementById('sub-max-gap-item');
+
+            subBadge.textContent = `ギャップ: ${subDiff > 0 ? '+' : ''}${subDiff}pt`;
+            if (subDiff >= 6) {
+                subTitle.textContent = '現場・部下への関わり方に認識のズレがあります';
+                subDesc.textContent = '自分では丁寧に指導・連携しているつもりでも、部下や周囲からは「意図が伝わっていない」「任せてもらえていない」と感じられている可能性があります。';
+            } else if (subDiff <= -6) {
+                subTitle.textContent = '部下・後輩から非常に厚い信頼を得ています';
+                subDesc.textContent = '現場メンバーはあなたの支援やリーダーシップを高く評価しています。この現場の支持を基盤に、さらに大きな組織成果へ繋げましょう。';
+            } else {
+                subTitle.textContent = '部下・周囲との信頼関係は安定しています';
+                subDesc.textContent = '自己認識と現場からの見られ方に大きな乖離はありません。引き続き双方向の対話を通じてチームの心理的安全性を高めていきましょう。';
+            }
+            subMaxItem.innerHTML = `<i class="fa-solid fa-magnifying-glass mr-1"></i>最大の注目ギャップ項目: <strong>「${maxSubGapQ.skillTag}」</strong> (自己:${appState.answers.self[maxSubGapQ.id]} / 部下:${appState.answers.sub[maxSubGapQ.id]})`;
+        }
+
+        function renderCategoryComparisonTable(categories, avgSelf, avgBoss, avgSub) {
+            const tbody = document.getElementById('category-gap-tbody');
+            tbody.innerHTML = '';
+
+            categories.forEach((catName, idx) => {
+                const s = avgSelf[idx];
+                const b = avgBoss[idx];
+                const sub = avgSub[idx];
+
+                let statusBadge = '';
+                let comment = '';
+
+                if (s - b >= 0.8 && s - sub >= 0.8) {
+                    statusBadge = `<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-700 font-bold text-[11px]">要注意: 自己過大 (+${(s - (b+sub)/2).toFixed(1)})</span>`;
+                    comment = '上司・部下の双方から自己評価より低く見られています。行動の客観的な見直しが最優先です。';
+                } else if (s - b >= 0.8) {
+                    statusBadge = `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[11px]">対上司ギャップ (自己>${b})</span>`;
+                    comment = '上司の求める基準に達していません。成果のアピール方法または視座の引き上げが必要です。';
+                } else if (s - sub >= 0.8) {
+                    statusBadge = `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[11px]">対部下ギャップ (自己>${sub})</span>`;
+                    comment = '現場メンバーが不足感を感じています。日々のコミュニケーションや権限移譲を見直しましょう。';
+                } else if (b - s >= 0.8 || sub - s >= 0.8) {
+                    statusBadge = `<span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold text-[11px]">隠れた強み (他者評価高)</span>`;
+                    comment = '自分が思う以上に周囲から高く評価されている強みです。自信を持って発揮してください。';
+                } else {
+                    statusBadge = `<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[11px]">認識一致 (バランス良好)</span>`;
+                    comment = '3者の認識が一致しています。次の役職基準（4.2以上）を目指して着実に伸ばしましょう。';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition';
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-bold text-slate-800">${catName}</td>
+                    <td class="py-3 px-3 text-center font-bold text-indigo-600">${s.toFixed(1)}</td>
+                    <td class="py-3 px-3 text-center font-bold text-emerald-600">${b.toFixed(1)}</td>
+                    <td class="py-3 px-3 text-center font-bold text-amber-600">${sub.toFixed(1)}</td>
+                    <td class="py-3 px-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                            ${statusBadge}
+                            <span class="text-xs text-slate-600">${comment}</span>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderRadarChart(labels, selfScores, bossScores, subScores) {
+            const ctx = document.getElementById('skillRadarChart').getContext('2d');
+            if (radarChartInstance) {
+                radarChartInstance.destroy();
+            }
+
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '自己評価',
+                            data: selfScores,
+                            backgroundColor: 'rgba(79, 70, 229, 0.20)',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                            borderWidth: 2.5
+                        },
+                        {
+                            label: '上司からの評価',
+                            data: bossScores,
+                            backgroundColor: 'rgba(5, 150, 105, 0.15)',
+                            borderColor: 'rgba(5, 150, 105, 0.9)',
+                            pointBackgroundColor: 'rgba(5, 150, 105, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: '部下からの評価',
+                            data: subScores,
+                            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                            borderColor: 'rgba(245, 158, 11, 0.9)',
+                            pointBackgroundColor: 'rgba(245, 158, 11, 1)',
+                            borderDash: [4, 4],
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 5,
+                            ticks: {
+                                stepSize: 1,
+                                backdropColor: 'transparent',
+                                font: { size: 10 }
+                            },
+                            pointLabels: {
+                                font: { size: 11, weight: 'bold', family: "'Noto Sans JP', sans-serif" },
+                                color: '#334155'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 11 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderGoalsList() {
+            const listEl = document.getElementById('goals-list');
+            listEl.innerHTML = '';
+
+            const filteredGoals = appState.goals.filter(g => {
+                if (appState.currentFilter === 'all') return true;
+                return g.category === appState.currentFilter;
+            });
+
+            if (filteredGoals.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        該当するカテゴリの目標がありません。下のフォームから追加できます。
+                    </div>
+                `;
+            } else {
+                filteredGoals.forEach(goal => {
+                    const item = document.createElement('div');
+                    item.className = `p-4 rounded-xl border transition flex items-start justify-between gap-3 ${
+                        goal.completed 
+                        ? 'bg-slate-50 border-slate-200 opacity-75' 
+                        : 'bg-white border-slate-200 hover:border-indigo-300 shadow-sm'
+                    }`;
+
+                    const priorityBadgeColor = goal.priority === '最優先' 
+                        ? 'bg-rose-100 text-rose-700' 
+                        : (goal.priority === '重要' ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-700');
+
+                    item.innerHTML = `
+                        <div class="flex items-start gap-3 flex-grow">
+                            <button onclick="toggleGoalComplete('${goal.id}')" class="mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition ${
+                                goal.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-indigo-500'
+                            }">
+                                ${goal.completed ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                            </button>
+                            <div class="flex-grow">
+                                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${priorityBadgeColor}">${goal.priority}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">${goal.categoryLabel}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700"><i class="fa-regular fa-clock mr-1"></i>${goal.deadline}</span>
+                                </div>
+                                <p class="text-sm font-bold text-slate-800 ${goal.completed ? 'line-through text-slate-400' : ''}">${goal.title}</p>
+                                <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                    <i class="fa-solid fa-flag text-indigo-500 text-[10px]"></i>
+                                    <span>達成指標(KPI): ${goal.kpi}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <button onclick="deleteGoal('${goal.id}')" class="text-slate-300 hover:text-rose-500 p-1 transition" title="削除">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    `;
+                    listEl.appendChild(item);
+                });
+            }
+
+            updateGoalProgress();
+        }
+
+        function toggleGoalComplete(goalId) {
+            const target = appState.goals.find(g => g.id === goalId);
+            if (target) {
+                target.completed = !target.completed;
+                saveStateToStorage();
+                renderGoalsList();
+            }
+        }
+
+        function deleteGoal(goalId) {
+            appState.goals = appState.goals.filter(g => g.id !== goalId);
+            saveStateToStorage();
+            renderGoalsList();
+            showToast('目標を削除しました');
+        }
+
+        function addCustomGoal() {
+            const input = document.getElementById('new-goal-title');
+            const deadline = document.getElementById('new-goal-deadline').value;
+            const title = input.value.trim();
+
+            if (!title) {
+                showToast('目標の内容を入力してください', true);
+                return;
+            }
+
+            appState.goals.unshift({
+                id: 'custom_' + Date.now(),
+                category: 'custom',
+                categoryLabel: '自作スキルアップ目標',
+                skillTag: '自己設定',
+                priority: '重要',
+                title: title,
+                kpi: '定めた期限内の完遂と振り返り',
+                deadline: deadline,
+                completed: false
+            });
+
+            input.value = '';
+            saveStateToStorage();
+            renderGoalsList();
+            showToast('新しい目標を追加しました');
+        }
+
+        function filterGoals(filterType) {
+            appState.currentFilter = filterType;
+            const tabs = ['all', 'gap_fix', 'next_step', 'current_role', 'custom'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (!btn) return;
+                if (t === filterType) {
+                    btn.className = 'goal-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white';
+                } else {
+                    btn.className = 'goal-tab px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200';
+                }
+            });
+            renderGoalsList();
+        }
+
+        function updateGoalProgress() {
+            const total = appState.goals.length;
+            const done = appState.goals.filter(g => g.completed).length;
+            const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+            document.getElementById('goal-progress-text').textContent = `${pct}% (${done}/${total} 完了)`;
+            document.getElementById('goal-progress-bar').style.width = `${pct}%`;
+        }
+
+        function copyGoalsToClipboard() {
+            const role = ROLES_DATA[appState.selectedRoleId];
+            const memo = document.getElementById('commitment-memo').value;
+            const sVal = document.getElementById('self-score-val').textContent;
+            const bVal = document.getElementById('boss-score-val').textContent;
+            const subVal = document.getElementById('sub-score-val').textContent;
+            const patternText = document.getElementById('pattern-type-badge').textContent;
+            
+            let text = `【360°キャリア＆スキルアップ目標設定シート】\n`;
+            text += `■ 現在の役職: ${role.name} → 次のターゲット: ${role.nextRole}\n`;
+            text += `■ 360°評価スコア: 自己評価 ${sVal}点 / 上司評価 ${bVal}点 / 部下評価 ${subVal}点\n`;
+            text += `■ 360°バランス診断: ${patternText}\n\n`;
+            text += `【スキルアップ目標・アクションプラン】\n`;
+
+            appState.goals.forEach((g, idx) => {
+                const check = g.completed ? '[完了]' : '[未完了]';
+                text += `${idx + 1}. ${check} 【${g.deadline}】 ${g.title}\n   └ 達成基準(KPI): ${g.kpi}\n`;
+            });
+
+            text += `\n【コミットメント宣言】\n${memo}\n`;
+
+            const tempArea = document.createElement('textarea');
+            tempArea.value = text;
+            document.body.appendChild(tempArea);
+            tempArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempArea);
+
+            showToast('目標シートをクリップボードにコピーしました');
+        }
+
+        function navigateStep(stepNum) {
+            if (stepNum === 1) {
+                showStepUI(1);
+            } else if (stepNum === 2) {
+                goToStep2(false);
+            } else if (stepNum === 3) {
+                if (Object.keys(appState.answers.self || {}).length < 10) {
+                    showToast('先にステップ2の診断質問を完了してください', true);
+                    goToStep2(true);
+                    return;
+                }
+                renderStep3Results();
+                showStepUI(3);
+            }
+        }
+
+        function showStepUI(stepNum) {
+            appState.currentStep = stepNum;
+            saveStateToStorage();
+
+            [1, 2, 3].forEach(s => {
+                const sec = document.getElementById(`step-${s}`);
+                const dot = document.getElementById(`step-dot-${s}`);
+                const label = document.getElementById(`step-label-${s}`);
+
+                if (s === stepNum) {
+                    sec.classList.remove('hidden');
+                    dot.className = 'w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-indigo-600 text-white ring-4 ring-white shadow';
+                    label.className = 'text-xs font-bold text-indigo-600 mt-1 bg-white px-2 rounded';
+                } else if (s < stepNum) {
+                    sec.classList.add('hidden');
+                    dot.className = 'w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-emerald-500 text-white ring-4 ring-white';
+                    dot.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+                    label.className = 'text-xs font-semibold text-emerald-600 mt-1 bg-white px-2 rounded';
+                } else {
+                    sec.classList.add('hidden');
+                    dot.className = 'w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-slate-200 text-slate-500 ring-4 ring-white';
+                    dot.textContent = s;
+                    label.className = 'text-xs font-medium text-slate-500 mt-1 bg-white px-2 rounded';
+                }
+            });
+
+            if (stepNum === 1) document.getElementById('step-dot-1').textContent = '1';
+            if (stepNum === 2) document.getElementById('step-dot-2').textContent = '2';
+            if (stepNum === 3) document.getElementById('step-dot-3').textContent = '3';
+
+            const progressLine = document.getElementById('progress-line');
+            progressLine.style.width = stepNum === 1 ? '0%' : (stepNum === 2 ? '50%' : '100%');
+        }
+
+        function saveStateToStorage() {
+            try {
+                const memoEl = document.getElementById('commitment-memo');
+                if (memoEl && appState.currentStep === 3) {
+                    appState.commitmentMemo = memoEl.value;
+                }
+                localStorage.setItem('career_compass_state_v1', JSON.stringify(appState));
+            } catch (e) {
+                console.warn('Storage save error:', e);
+            }
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem('career_compass_state_v1');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    appState = { ...appState, ...parsed };
+                }
+            } catch (e) {
+                console.warn('Storage load error:', e);
+            }
+        }
+
+        function resetApp() {
+            appState = {
+                currentStep: 1,
+                selectedRoleId: 'staff',
+                activeRater: 'self',
+                answers: { self: {}, boss: {}, sub: {} },
+                selectedBottlenecks: [],
+                customIssue: '',
+                goals: [],
+                commitmentMemo: '',
+                currentFilter: 'all'
+            };
+            saveStateToStorage();
+            selectRole('staff', true);
+            showStepUI(1);
+            showToast('診断データをリセットしました');
+        }
+
+        function showToast(message, isWarning = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-msg');
+
+            msg.textContent = message;
+            icon.className = isWarning 
+                ? 'fa-solid fa-circle-exclamation text-amber-400' 
+                : 'fa-solid fa-circle-check text-emerald-400';
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2800);
+        }
+    </script>
+</body>
+</html>
